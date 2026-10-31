@@ -1,0 +1,330 @@
+@import 'tailwindcss';
+
+@plugin 'tailwindcss-animate';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  HRMD design tokens.
+
+  Nothing in a component may hardcode a colour, radius or font — everything is
+  one of these tokens, so the whole system (including the PDF styling added in
+  a later phase) can be retuned from this file alone.
+
+  The palette is blue + green on green-tinted neutrals: blue is the one action
+  and focus colour, green means "active / confirmed" and carries the sidebar,
+  and the greys are warmed towards green so nothing looks like flat #808080.
+*/
+@theme {
+    --font-sans: 'Public Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+
+    /* 14px is the body size for a records app: everything steps from there. */
+    --text-2xs: 0.6875rem;
+    --text-2xs--line-height: 1rem;
+
+    --radius-xl: calc(var(--radius) + 4px);
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-success-surface: var(--success-surface);
+
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+    --color-warning-surface: var(--warning-surface);
+
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-destructive-surface: var(--destructive-surface);
+
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    /*
+      Tally sheet surfaces. The sheet is read across, so the columns are told
+      apart by surface rather than by rules or colour: a ruled head, zebra
+      rows, a quiet wash on months that have not happened yet, and one green
+      wash on the month being encoded now.
+    */
+    --color-table-head: var(--table-head);
+    --color-table-group-head: var(--table-group-head);
+    --color-row-zebra: var(--row-zebra);
+    --color-row-hover: var(--row-hover);
+    --color-month-current: var(--month-current);
+    --color-month-future: var(--month-future);
+    --color-total-grand: var(--total-grand);
+
+    /*
+      Leave chip palette. leave_types.color holds one of these hue keys, so HR
+      can recolour a leave type without a deploy and no component ever holds a
+      colour value. Each pair is a tinted surface plus its own ink, which keeps
+      the code legible at 11px — a saturated chip with white text would not be.
+    */
+    --color-chip-sky: var(--chip-sky);
+    --color-chip-sky-ink: var(--chip-sky-ink);
+    --color-chip-amber: var(--chip-amber);
+    --color-chip-amber-ink: var(--chip-amber-ink);
+    --color-chip-violet: var(--chip-violet);
+    --color-chip-violet-ink: var(--chip-violet-ink);
+    --color-chip-teal: var(--chip-teal);
+    --color-chip-teal-ink: var(--chip-teal-ink);
+    --color-chip-slate: var(--chip-slate);
+    --color-chip-slate-ink: var(--chip-slate-ink);
+    --color-chip-emerald: var(--chip-emerald);
+    --color-chip-emerald-ink: var(--chip-emerald-ink);
+    --color-chip-rose: var(--chip-rose);
+    --color-chip-rose-ink: var(--chip-rose-ink);
+
+    --color-sidebar: var(--sidebar-background);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+    --background: hsl(165, 20%, 98%);
+    --foreground: hsl(172, 34%, 10%);
+    --card: hsl(0, 0%, 100%);
+    --card-foreground: hsl(172, 34%, 10%);
+    --popover: hsl(0, 0%, 100%);
+    --popover-foreground: hsl(172, 34%, 10%);
+
+    --primary: hsl(226, 71%, 45%);
+    --primary-foreground: hsl(0, 0%, 100%);
+    --secondary: hsl(165, 18%, 94%);
+    --secondary-foreground: hsl(172, 30%, 18%);
+    --muted: hsl(165, 18%, 95.5%);
+    --muted-foreground: hsl(170, 12%, 37%);
+    --accent: hsl(165, 22%, 91%);
+    --accent-foreground: hsl(172, 32%, 15%);
+
+    /* Green is a state, not decoration: active accounts, saved, confirmed. */
+    --success: hsl(160, 76%, 26%);
+    --success-foreground: hsl(0, 0%, 100%);
+    --success-surface: hsl(158, 48%, 94%);
+
+    --warning: hsl(30, 80%, 34%);
+    --warning-foreground: hsl(0, 0%, 100%);
+    --warning-surface: hsl(38, 84%, 93%);
+
+    --destructive: hsl(4, 76%, 40%);
+    --destructive-foreground: hsl(0, 0%, 100%);
+    --destructive-surface: hsl(4, 70%, 96%);
+
+    --border: hsl(165, 14%, 88%);
+    --input: hsl(165, 14%, 83%);
+    --ring: hsl(226, 71%, 45%);
+
+    --chart-1: hsl(226, 71%, 52%);
+    --chart-2: hsl(160, 72%, 32%);
+    --chart-3: hsl(192, 70%, 36%);
+    --chart-4: hsl(30, 80%, 42%);
+    --chart-5: hsl(280, 38%, 48%);
+
+    --radius: 0.625rem;
+
+    --table-head: hsl(165, 18%, 93%);
+    --table-group-head: hsl(165, 18%, 89%);
+    --row-zebra: hsl(165, 20%, 98.5%);
+    --row-hover: hsl(165, 26%, 96%);
+    --month-current: hsl(158, 40%, 96%);
+    --month-future: hsl(165, 10%, 97.5%);
+    --total-grand: hsl(165, 18%, 96%);
+
+    --chip-sky: hsl(213, 63%, 92%);
+    --chip-sky-ink: hsl(213, 67%, 26%);
+    --chip-amber: hsl(27, 84%, 90%);
+    --chip-amber-ink: hsl(25, 84%, 26%);
+    --chip-violet: hsl(264, 52%, 92%);
+    --chip-violet-ink: hsl(265, 48%, 32%);
+    --chip-teal: hsl(167, 45%, 88%);
+    --chip-teal-ink: hsl(170, 69%, 19%);
+    --chip-slate: hsl(210, 13%, 91%);
+    --chip-slate-ink: hsl(210, 12%, 20%);
+    --chip-emerald: hsl(110, 43%, 90%);
+    --chip-emerald-ink: hsl(114, 48%, 23%);
+    --chip-rose: hsl(350, 55%, 93%);
+    --chip-rose-ink: hsl(348, 58%, 28%);
+
+    /* The ink-green sidebar from the tally sheet mockup. */
+    --sidebar-background: hsl(172, 52%, 10%);
+    --sidebar-foreground: hsl(165, 20%, 80%);
+    --sidebar-primary: hsl(158, 62%, 46%);
+    --sidebar-primary-foreground: hsl(172, 55%, 8%);
+    --sidebar-accent: hsl(172, 38%, 16%);
+    --sidebar-accent-foreground: hsl(0, 0%, 100%);
+    --sidebar-border: hsl(172, 34%, 18%);
+    --sidebar-ring: hsl(158, 62%, 46%);
+}
+
+.dark {
+    --background: hsl(174, 22%, 6%);
+    --foreground: hsl(165, 14%, 92%);
+    --card: hsl(172, 20%, 9%);
+    --card-foreground: hsl(165, 14%, 92%);
+    --popover: hsl(172, 20%, 11%);
+    --popover-foreground: hsl(165, 14%, 92%);
+
+    --primary: hsl(222, 84%, 67%);
+    --primary-foreground: hsl(224, 60%, 12%);
+    --secondary: hsl(172, 16%, 15%);
+    --secondary-foreground: hsl(165, 14%, 92%);
+    --muted: hsl(172, 16%, 13%);
+    --muted-foreground: hsl(165, 10%, 64%);
+    --accent: hsl(172, 18%, 17%);
+    --accent-foreground: hsl(165, 14%, 95%);
+
+    --success: hsl(158, 56%, 46%);
+    --success-foreground: hsl(170, 50%, 8%);
+    --success-surface: hsl(165, 40%, 13%);
+
+    --warning: hsl(36, 82%, 60%);
+    --warning-foreground: hsl(30, 60%, 10%);
+    --warning-surface: hsl(34, 40%, 14%);
+
+    --destructive: hsl(4, 72%, 58%);
+    --destructive-foreground: hsl(0, 0%, 100%);
+    --destructive-surface: hsl(4, 40%, 15%);
+
+    --border: hsl(172, 14%, 18%);
+    --input: hsl(172, 14%, 23%);
+    --ring: hsl(222, 84%, 67%);
+
+    --chart-1: hsl(222, 84%, 67%);
+    --chart-2: hsl(158, 56%, 46%);
+    --chart-3: hsl(192, 60%, 52%);
+    --chart-4: hsl(36, 82%, 60%);
+    --chart-5: hsl(280, 50%, 66%);
+
+    --table-head: hsl(172, 16%, 14%);
+    --table-group-head: hsl(172, 16%, 17%);
+    --row-zebra: hsl(172, 18%, 10.5%);
+    --row-hover: hsl(172, 18%, 14%);
+    --month-current: hsl(160, 26%, 13%);
+    --month-future: hsl(174, 12%, 8%);
+    --total-grand: hsl(172, 16%, 12%);
+
+    --chip-sky: hsl(213, 38%, 20%);
+    --chip-sky-ink: hsl(211, 75%, 82%);
+    --chip-amber: hsl(27, 40%, 19%);
+    --chip-amber-ink: hsl(32, 80%, 76%);
+    --chip-violet: hsl(264, 30%, 22%);
+    --chip-violet-ink: hsl(266, 70%, 85%);
+    --chip-teal: hsl(170, 38%, 16%);
+    --chip-teal-ink: hsl(167, 55%, 76%);
+    --chip-slate: hsl(210, 12%, 22%);
+    --chip-slate-ink: hsl(210, 14%, 82%);
+    --chip-emerald: hsl(140, 32%, 16%);
+    --chip-emerald-ink: hsl(120, 45%, 78%);
+    --chip-rose: hsl(348, 30%, 21%);
+    --chip-rose-ink: hsl(350, 70%, 84%);
+
+    --sidebar-background: hsl(174, 30%, 7%);
+    --sidebar-foreground: hsl(165, 16%, 78%);
+    --sidebar-primary: hsl(158, 56%, 48%);
+    --sidebar-primary-foreground: hsl(172, 55%, 7%);
+    --sidebar-accent: hsl(172, 24%, 14%);
+    --sidebar-accent-foreground: hsl(165, 14%, 95%);
+    --sidebar-border: hsl(172, 20%, 15%);
+    --sidebar-ring: hsl(158, 56%, 48%);
+}
+
+@layer base {
+    /*
+      Tailwind v4 defaults the border colour to currentColor, which would make
+      every hairline inherit the text colour. Hairlines are the main separator
+      in this interface, so they default to the token instead.
+    */
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--border);
+    }
+
+    body {
+        @apply bg-background text-foreground;
+
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    /* Numbers in this app are read in columns, so they must not jitter. */
+    table,
+    time,
+    [data-numeric] {
+        font-variant-numeric: tabular-nums;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+        @apply tracking-tight;
+    }
+}
+
+@utility month-spine {
+    /*
+      The signature detail, carried onto the tally sheet: the month being
+      encoded now gets a ruled accent spine down its left edge, the way the
+      paper sheet was marked with a pen before work started on a column.
+    */
+    box-shadow: inset 2px 0 0 var(--primary);
+}
+
+@utility sticky-edge {
+    /*
+      Tells the reader the names are pinned and the sheet is scrolling under
+      them. Only applied once the sheet has actually scrolled, so a sheet
+      sitting at its left edge shows no shadow for nothing.
+    */
+    box-shadow: 10px 0 14px -12px color-mix(in oklab, var(--foreground) 60%, transparent);
+}
+
+@utility ledger-rule {
+    /*
+      The signature detail: a hairline ruled surface, the way the paper tally
+      sheet is ruled. Used by tables and by the form's field groups.
+    */
+    background-image: linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+    background-size: 100% var(--ledger-row-height, 44px);
+}
