@@ -22,7 +22,11 @@ export function LeaveDatePreview({ state, className }: LeaveDatePreviewProps) {
     const { result, loading, failed } = state;
 
     return (
-        <section aria-live="polite" aria-label="What will be saved" className={cn('bg-muted/40 rounded-lg border p-3', className)}>
+        <section
+            aria-live="polite"
+            aria-label="What will be saved"
+            className={cn('border-border/70 bg-muted/30 rounded-xl border p-3.5 shadow-2xs', className)}
+        >
             {result === null && !loading && (
                 <p className="text-muted-foreground text-xs">
                     {failed

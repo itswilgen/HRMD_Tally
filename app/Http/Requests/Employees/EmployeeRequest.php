@@ -27,14 +27,32 @@ abstract class EmployeeRequest extends FormRequest
      */
     public function rules(): array
     {
+        $rules = self::fieldRules(
+            canSetSalary: $this->user()?->can('viewSalary', Employee::class) ?? false,
+            canSetEmploymentStatus: $this->user()?->can('setEmploymentStatus', Employee::class) ?? false,
+        );
+
+        // No withoutTrashed(): the rule queries the table as it stands, so a
+        // soft-deleted employee keeps their number. Reusing it would attach
+        // their leave history to someone new.
+        $rules['employee_no'][] = Rule::unique('employees', 'employee_no')->ignore($this->employeeId());
+        $rules['office_id'][] = Rule::exists(Office::class, 'id');
+
+        return $rules;
+    }
+
+    /**
+     * The rules for one record's fields, without the two that query the
+     * database. The CSV import checks a whole file of rows against these and
+     * answers "is this number taken?" and "does this office exist?" with one
+     * query for the file instead of one per row.
+     *
+     * @return array<string, list<mixed>>
+     */
+    public static function fieldRules(bool $canSetSalary, bool $canSetEmploymentStatus): array
+    {
         $rules = [
-            'employee_no' => [
-                'required', 'string', 'max:50',
-                // No withoutTrashed(): the rule queries the table as it stands,
-                // so a soft-deleted employee keeps their number. Reusing it
-                // would attach their leave history to someone new.
-                Rule::unique('employees', 'employee_no')->ignore($this->employeeId()),
-            ],
+            'employee_no' => ['required', 'string', 'max:50'],
             'last_name' => ['required', 'string', 'max:100'],
             'first_name' => ['required', 'string', 'max:100'],
             'middle_name' => ['nullable', 'string', 'max:100'],
@@ -45,14 +63,14 @@ abstract class EmployeeRequest extends FormRequest
             // Nullable because job order personnel do not have one.
             'salary_grade' => ['nullable', 'integer', 'min:1', 'max:33'],
 
-            'office_id' => ['required', 'integer', Rule::exists(Office::class, 'id')],
+            'office_id' => ['required', 'integer'],
         ];
 
-        if ($this->user()?->can('viewSalary', Employee::class) ?? false) {
+        if ($canSetSalary) {
             $rules['monthly_rate'] = ['nullable', 'numeric', 'min:0', 'max:9999999999'];
         }
 
-        if ($this->user()?->can('setEmploymentStatus', Employee::class) ?? false) {
+        if ($canSetEmploymentStatus) {
             $rules['employment_status'] = ['nullable', 'string', 'max:60'];
         }
 
@@ -63,6 +81,14 @@ abstract class EmployeeRequest extends FormRequest
      * @return array<string, string>
      */
     public function messages(): array
+    {
+        return self::fieldMessages();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function fieldMessages(): array
     {
         return [
             'employee_no.unique' => 'Another employee already has this employee number.',
@@ -77,6 +103,14 @@ abstract class EmployeeRequest extends FormRequest
      * @return array<string, string>
      */
     public function attributes(): array
+    {
+        return self::fieldAttributes();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function fieldAttributes(): array
     {
         return [
             'employee_no' => 'employee number',

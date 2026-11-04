@@ -12,6 +12,7 @@ import { useLeavePreview } from '@/hooks/use-leave-preview';
 import { monthLabel } from '@/lib/months';
 import { type DayPartOption, type DayPartValue, type EmployeeRecord, type LeaveTypeOption } from '@/types';
 import { useForm } from '@inertiajs/react';
+import { CalendarPlus } from 'lucide-react';
 import { type FormEventHandler, useEffect } from 'react';
 
 /**
@@ -139,9 +140,17 @@ export function AddLeaveDialog({ open, onOpenChange, employees, leaveTypes, dayP
                 // inset keeps it off the edges of a phone.
                 className="max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-xl gap-0 overflow-y-auto rounded-xl sm:rounded-xl"
             >
-                <DialogHeader className="pr-8 text-left">
-                    <DialogTitle>Add leave</DialogTitle>
-                    <DialogDescription>
+                <DialogHeader className="space-y-2 pr-8 text-left">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-xl">
+                            <CalendarPlus className="size-5" />
+                        </div>
+                        <div>
+                            <DialogTitle className="text-lg font-bold tracking-tight">Add leave</DialogTitle>
+                            <p className="text-2xs text-primary font-semibold tracking-wider uppercase">Encoding Form</p>
+                        </div>
+                    </div>
+                    <DialogDescription className="text-muted-foreground text-xs leading-relaxed">
                         One entry per approved leave form{monthHint === null ? '' : `, opened on ${monthHint}`}. Weekends and holidays inside a range
                         are skipped automatically.
                     </DialogDescription>

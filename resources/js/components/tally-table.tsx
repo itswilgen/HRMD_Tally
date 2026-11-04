@@ -76,7 +76,9 @@ export function TallyTable({
         <div
             ref={scroller}
             onScroll={(event) => setScrolled(event.currentTarget.scrollLeft > 0)}
-            className="max-h-[68vh] overflow-auto overscroll-x-contain"
+            // isolate keeps the sticky headers' z-indexes inside this box, so
+            // they never paint over the pinned top bar and page header.
+            className="isolate max-h-[68vh] overflow-auto overscroll-x-contain"
         >
             <table className="w-full border-separate border-spacing-0 text-left">
                 <caption className="sr-only">

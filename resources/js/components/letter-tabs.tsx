@@ -25,7 +25,11 @@ export function LetterTabs({ available, value, onChange }: LetterTabsProps) {
     const inUse = new Set(available);
 
     return (
-        <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Filter by first letter of surname">
+        <div
+            className="border-border/50 bg-muted/20 flex flex-wrap items-center gap-1 rounded-xl border p-1"
+            role="group"
+            aria-label="Filter by first letter of surname"
+        >
             <Tab label="All" title="Show every employee" selected={value === ''} onSelect={() => onChange('')} reduceMotion={reduceMotion} wide />
 
             {ALPHABET.map((letter) => {
@@ -84,7 +88,7 @@ function Tab({ label, title, selected, disabled = false, wide = false, reduceMot
                 <motion.span
                     layoutId="letter-tab-selected"
                     aria-hidden="true"
-                    className="bg-primary absolute inset-0 rounded-md"
+                    className="bg-primary absolute inset-0 rounded-lg shadow-xs"
                     transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 30 }}
                 />
             )}

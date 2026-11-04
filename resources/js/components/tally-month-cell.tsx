@@ -55,14 +55,14 @@ export function TallyMonthCell({ employeeName, monthLabel, month, state, canEnco
                     onClick={onAdd}
                     aria-label={`Add leave for ${employeeName} in ${monthLabel}`}
                     className={cn(
-                        'text-muted-foreground absolute right-1 bottom-1 grid size-6 cursor-pointer place-items-center rounded-sm border border-dashed',
-                        'hover:border-primary hover:text-primary focus-visible:ring-ring transition-opacity focus-visible:ring-2 focus-visible:outline-none',
+                        'border-primary/30 bg-primary/10 text-primary absolute right-1 bottom-1 grid size-5.5 cursor-pointer place-items-center rounded-md border shadow-2xs',
+                        'hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:ring-ring transition-all duration-150 focus-visible:ring-2 focus-visible:outline-none',
                         // Hidden until this cell is pointed at or tabbed to, so
                         // 300 dashed squares do not compete with the figures.
-                        'opacity-0 group-hover/cell:opacity-100 focus-visible:opacity-100',
+                        'scale-90 opacity-0 group-hover/cell:scale-100 group-hover/cell:opacity-100 focus-visible:opacity-100',
                     )}
                 >
-                    <Plus className="size-3.5" aria-hidden="true" />
+                    <Plus className="size-3.5 stroke-[2.5]" aria-hidden="true" />
                 </button>
             )}
         </td>

@@ -67,8 +67,15 @@ it('refuses to let HR Staff take an employee off the encoding list', function (s
 
 it('has no route that erases an employee', function (): void {
     // Leave records point at employees, and the paper sheet was never thrown
-    // away either. Deactivating is the only removal HR gets.
-    expect(Route::has('employees.destroy'))->toBeFalse();
+    // away either. The masterlist's bulk action soft deletes (see the bulk
+    // delete section below); nothing anywhere erases a row.
+    expect(Route::has('employees.destroy'))->toBeFalse()
+        ->and(Route::has('employees.force-delete'))->toBeFalse();
+
+    $admin = hrAdmin();
+    $employee = Employee::factory()->create();
+
+    expect($admin->can('forceDelete', $employee))->toBeFalse();
 });
 
 /*
@@ -591,4 +598,161 @@ it('leaves the leave records of a deactivated employee alone', function (): void
     // sheet has to keep printing the same numbers.
     expect($employee->leaveRecords()->count())->toBe(2)
         ->and(Employee::query()->whereKey($employee->id)->exists())->toBeTrue();
+});
+
+/*
+|--------------------------------------------------------------------------
+| Bulk delete from the masterlist
+|--------------------------------------------------------------------------
+|
+| The tick-boxes on the employees list. "Delete" is a soft delete for a record
+| created by mistake; anyone with leave on file is kept, because their days are
+| printed on tally sheets that have to keep reading correctly.
+*/
+
+it('soft deletes the ticked employees without erasing them', function (): void {
+    $admin = hrAdmin();
+    $abad = Employee::factory()->create(['last_name' => 'Abad', 'first_name' => 'Maria']);
+    $santos = Employee::factory()->create(['last_name' => 'Santos', 'first_name' => 'Pedro']);
+    $untouched = Employee::factory()->create(['last_name' => 'Zamora']);
+
+    $this->actingAs($admin)
+        ->from(route('employees.index'))
+        ->delete(route('employees.bulk-destroy'), ['ids' => [$abad->id, $santos->id]])
+        ->assertRedirect(route('employees.index'))
+        ->assertSessionHasNoErrors()
+        ->assertSessionHas('success', '2 employees removed from the masterlist. An HR Admin can restore them.');
+
+    // Gone from every list the app builds...
+    expect(Employee::query()->whereKey([$abad->id, $santos->id])->count())->toBe(0)
+        // ...but still in the table, which is what makes it recoverable.
+        ->and(Employee::withTrashed()->whereKey([$abad->id, $santos->id])->count())->toBe(2)
+        ->and(Employee::withTrashed()->find($abad->id)?->deleted_at)->not->toBeNull()
+        ->and(Employee::query()->whereKey($untouched->id)->exists())->toBeTrue();
+});
+
+it('keeps an employee who already has leave on file and deletes the rest', function (): void {
+    $admin = hrAdmin();
+    $mistake = Employee::factory()->create(['last_name' => 'Duplicado', 'first_name' => 'Juan']);
+    // Middle name and suffix pinned, so the name in the message is the whole
+    // list_name and not whatever the factory happened to invent.
+    $encoded = Employee::factory()->create([
+        'last_name' => 'Reyes',
+        'first_name' => 'Ana',
+        'middle_name' => null,
+        'suffix' => null,
+    ]);
+    LeaveRecord::factory()->count(2)->create(['employee_id' => $encoded->id]);
+
+    $this->actingAs($admin)
+        ->from(route('employees.index'))
+        ->delete(route('employees.bulk-destroy'), ['ids' => [$mistake->id, $encoded->id]])
+        ->assertSessionHasNoErrors()
+        // Both halves are reported: what went, and who was kept and why.
+        ->assertSessionHas('success', '1 employee removed from the masterlist. An HR Admin can restore the record.')
+        ->assertSessionHas(
+            'error',
+            '1 of the ticked employees has leave on file and was kept: Reyes, Ana. Deactivate them instead, so the tally sheets they appear on keep reading correctly.',
+        );
+
+    expect(Employee::query()->whereKey($mistake->id)->exists())->toBeFalse()
+        ->and(Employee::query()->whereKey($encoded->id)->exists())->toBeTrue()
+        ->and($encoded->leaveRecords()->count())->toBe(2);
+});
+
+it('deletes nothing when every ticked employee has leave on file', function (): void {
+    $admin = hrAdmin();
+    $employee = Employee::factory()->create(['last_name' => 'Macaraeg', 'first_name' => 'Rowena']);
+    LeaveRecord::factory()->create(['employee_id' => $employee->id]);
+
+    $this->actingAs($admin)
+        ->from(route('employees.index'))
+        ->delete(route('employees.bulk-destroy'), ['ids' => [$employee->id]])
+        ->assertSessionHasNoErrors()
+        ->assertSessionMissing('success');
+
+    expect(Employee::query()->whereKey($employee->id)->exists())->toBeTrue();
+});
+
+it('refuses to let HR Staff delete from the masterlist', function (): void {
+    $staff = hrStaff();
+    $employee = Employee::factory()->create();
+
+    $this->actingAs($staff)
+        ->delete(route('employees.bulk-destroy'), ['ids' => [$employee->id]])
+        ->assertForbidden();
+
+    expect(Employee::query()->whereKey($employee->id)->exists())->toBeTrue();
+});
+
+it('sends guests asking to delete to the sign-in page', function (): void {
+    $employee = Employee::factory()->create();
+
+    $this->delete(route('employees.bulk-destroy'), ['ids' => [$employee->id]])->assertRedirect(route('login'));
+
+    expect(Employee::query()->whereKey($employee->id)->exists())->toBeTrue();
+});
+
+it('rejects a delete payload that is empty, malformed or already deleted', function (array $ids, string $key): void {
+    $admin = hrAdmin();
+
+    $this->actingAs($admin)
+        ->from(route('employees.index'))
+        ->delete(route('employees.bulk-destroy'), ['ids' => $ids])
+        ->assertSessionHasErrors($key);
+})->with([
+    // An empty selection fails the array itself; a bad entry fails that entry.
+    'nothing ticked' => [[], 'ids'],
+    'not an id' => [['abc'], 'ids.0'],
+    'no such employee' => [[987654], 'ids.0'],
+]);
+
+it('rejects a second delete of the same employee rather than deleting twice', function (): void {
+    $admin = hrAdmin();
+    $employee = Employee::factory()->create();
+
+    $this->actingAs($admin)->from(route('employees.index'))
+        ->delete(route('employees.bulk-destroy'), ['ids' => [$employee->id]])
+        ->assertSessionHasNoErrors();
+
+    // The exists rule is scoped to whereNull('deleted_at'), so a dialog that
+    // was submitted twice is told the row is gone instead of silently passing.
+    $this->actingAs($admin)->from(route('employees.index'))
+        ->delete(route('employees.bulk-destroy'), ['ids' => [$employee->id]])
+        ->assertSessionHasErrors('ids.0');
+});
+
+it('refuses more than a hundred employees in one delete', function (): void {
+    $admin = hrAdmin();
+
+    $this->actingAs($admin)
+        ->from(route('employees.index'))
+        ->delete(route('employees.bulk-destroy'), ['ids' => range(1, 101)])
+        ->assertSessionHasErrors('ids');
+});
+
+it('records the bulk delete in the activity log with the names', function (): void {
+    $admin = hrAdmin();
+    $employee = Employee::factory()->create(['last_name' => 'Duplicado', 'first_name' => 'Juan']);
+
+    $this->actingAs($admin)
+        ->from(route('employees.index'))
+        ->delete(route('employees.bulk-destroy'), ['ids' => [$employee->id]])
+        ->assertSessionHasNoErrors();
+
+    $activity = DB::table('activity_log')->where('event', 'deleted')->latest('id')->first();
+
+    expect($activity)->not->toBeNull()
+        ->and($activity->log_name)->toBe('employee')
+        ->and($activity->causer_id)->toBe($admin->id)
+        // The name has to be in the log: once the row is soft deleted this is
+        // the only place the activity page can read who it was.
+        ->and($activity->properties)->toContain('Duplicado, Juan');
+});
+
+it('hides the tick-boxes from a role that may not delete', function (): void {
+    // The column is rendered from auth.user.can.deactivateEmployees, so the
+    // permission being absent is what keeps the control off the screen.
+    expect(hrStaff()->can('deleteMany', Employee::class))->toBeFalse()
+        ->and(hrAdmin()->can('deleteMany', Employee::class))->toBeTrue();
 });

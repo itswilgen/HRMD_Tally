@@ -83,10 +83,12 @@ export default function Offices({ offices, can }: OfficesPageProps) {
             />
 
             {can.manage && (
-                <form onSubmit={add} className="bg-card rounded-xl border p-4">
+                <form onSubmit={add} className="border-border/80 bg-card rounded-xl border p-4 shadow-xs">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                         <div className="grid flex-1 gap-1.5">
-                            <Label htmlFor="name">Add an office</Label>
+                            <Label htmlFor="name" className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                                Add an office
+                            </Label>
                             <Input
                                 id="name"
                                 value={addForm.data.name}
@@ -94,10 +96,11 @@ export default function Offices({ offices, can }: OfficesPageProps) {
                                 placeholder="Office of the City Treasurer"
                                 autoComplete="off"
                                 maxLength={150}
+                                className="h-11 rounded-lg"
                                 required
                             />
                         </div>
-                        <Button type="submit" disabled={addForm.processing} className="sm:mb-px">
+                        <Button type="submit" disabled={addForm.processing} className="h-11 cursor-pointer rounded-lg sm:mb-px">
                             {addForm.processing ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Plus aria-hidden="true" />}
                             Add office
                         </Button>
@@ -106,7 +109,7 @@ export default function Offices({ offices, can }: OfficesPageProps) {
                 </form>
             )}
 
-            <section className="bg-card overflow-hidden rounded-xl border">
+            <section className="border-border/80 bg-card overflow-hidden rounded-xl border shadow-xs">
                 {offices.length === 0 ? (
                     <EmptyState
                         icon={Building2}

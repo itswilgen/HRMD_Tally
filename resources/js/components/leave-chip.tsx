@@ -47,17 +47,23 @@ interface LeaveChipProps {
  * telling six leave types apart at a glance in a grid of 300 cells.
  */
 export function LeaveChip({ color, code, figures, name, onClick, title, label, className }: LeaveChipProps) {
-    const shape = cn('text-2xs inline-flex max-w-full items-center gap-1 rounded-sm px-1.5 py-1 leading-none', chipTokens(color), className);
+    const isInteractive = onClick !== undefined;
+    const shape = cn(
+        'text-2xs inline-flex max-w-full items-center gap-1 rounded-md px-1.5 py-0.5 leading-tight shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-current/15 ring-inset',
+        isInteractive && 'cursor-pointer transition-all hover:shadow-xs hover:brightness-95 active:scale-[0.97]',
+        chipTokens(color),
+        className,
+    );
 
     const content = (
         <>
             {figures !== undefined && (
-                <span className="font-mono font-semibold" data-numeric>
+                <span className="font-mono font-semibold tracking-tight" data-numeric>
                     {figures}
                 </span>
             )}
-            <span className={cn('font-semibold', figures === undefined && 'font-mono')}>{code}</span>
-            {name !== undefined && <span className="truncate font-normal opacity-80">{name}</span>}
+            <span className={cn('font-bold', figures === undefined && 'font-mono')}>{code}</span>
+            {name !== undefined && <span className="truncate font-normal opacity-85">{name}</span>}
         </>
     );
 

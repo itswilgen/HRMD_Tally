@@ -46,10 +46,24 @@ class EmployeePolicy
 
     /**
      * Employees are never hard-deleted, so "delete" means soft-delete: the row
-     * leaves the lists and its leave history stays intact. No screen offers it
-     * in Phase 1; it exists for a record created by mistake.
+     * leaves the lists and its leave history stays intact. It is for a record
+     * created by mistake — a duplicate, a typo imported twice — not for someone
+     * who has left the city government, who is deactivated instead.
      */
     public function delete(User $user, Employee $employee): bool
+    {
+        return $user->can(Permission::DeactivateEmployees->value);
+    }
+
+    /**
+     * The masterlist's tick-boxes, which are delete() offered over a selection.
+     *
+     * Asked once for the whole batch rather than once per ticked row, because
+     * delete() above does not vary by employee. What does vary per employee is
+     * whether the row may go at all, and that is EmployeeService::deleteMany's
+     * call: anyone with leave already on file is kept.
+     */
+    public function deleteMany(User $user): bool
     {
         return $user->can(Permission::DeactivateEmployees->value);
     }

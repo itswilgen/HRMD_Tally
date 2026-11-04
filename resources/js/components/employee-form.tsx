@@ -79,7 +79,7 @@ export function EmployeeForm({ employee, offices, employmentStatuses, can, submi
     };
 
     return (
-        <form onSubmit={submit} className="bg-card max-w-3xl rounded-xl border">
+        <form onSubmit={submit} className="bg-card w-full rounded-xl border">
             <Section
                 title="Name"
                 description="Typed the way it appears on the appointment paper. The tally sheet prints the surname first and only the middle initial."
@@ -126,13 +126,7 @@ export function EmployeeForm({ employee, offices, employmentStatuses, can, submi
                     </FormField>
 
                     <FormField id="suffix" label="Suffix" hint="Jr., Sr., III." optional error={errors.suffix}>
-                        <Input
-                            id="suffix"
-                            value={data.suffix}
-                            onChange={(event) => setData('suffix', event.target.value)}
-                            autoComplete="off"
-                            className="sm:max-w-32"
-                        />
+                        <Input id="suffix" value={data.suffix} onChange={(event) => setData('suffix', event.target.value)} autoComplete="off" />
                     </FormField>
                 </div>
             </Section>
@@ -187,7 +181,6 @@ export function EmployeeForm({ employee, offices, employmentStatuses, can, submi
                             value={data.salary_grade}
                             onChange={(event) => setData('salary_grade', event.target.value)}
                             autoComplete="off"
-                            className="sm:max-w-32"
                             data-numeric
                         />
                     </FormField>
@@ -236,19 +229,21 @@ export function EmployeeForm({ employee, offices, employmentStatuses, can, submi
                     title="Pay"
                     description="Personal information under the Data Privacy Act. Only an HR Admin can see or change this, and the change is recorded in the activity log."
                 >
-                    <FormField id="monthly_rate" label="Monthly rate" hint="Pesos, e.g. 23450.00" optional error={errors.monthly_rate}>
-                        <Input
-                            id="monthly_rate"
-                            type="number"
-                            min={0}
-                            step="0.01"
-                            value={data.monthly_rate}
-                            onChange={(event) => setData('monthly_rate', event.target.value)}
-                            autoComplete="off"
-                            className="sm:max-w-48"
-                            data-numeric
-                        />
-                    </FormField>
+                    {/* The same two columns as the sections above, so the rate lines up under salary grade. */}
+                    <div className="grid gap-5 sm:grid-cols-2">
+                        <FormField id="monthly_rate" label="Monthly rate" hint="Pesos, e.g. 23450.00" optional error={errors.monthly_rate}>
+                            <Input
+                                id="monthly_rate"
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                value={data.monthly_rate}
+                                onChange={(event) => setData('monthly_rate', event.target.value)}
+                                autoComplete="off"
+                                data-numeric
+                            />
+                        </FormField>
+                    </div>
                 </Section>
             )}
 

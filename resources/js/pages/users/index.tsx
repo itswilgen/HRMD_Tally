@@ -128,14 +128,16 @@ export default function UsersIndex({ users, roles, filters, lastActiveAdminId }:
                 }
             />
 
-            <section className="bg-card overflow-hidden rounded-xl border">
-                <div className="flex flex-col gap-3 border-b p-4 lg:flex-row lg:items-end">
+            <section className="border-border/80 bg-card overflow-hidden rounded-xl border shadow-xs">
+                <div className="flex flex-col gap-3.5 border-b p-4 lg:flex-row lg:items-end">
                     <div className="grid flex-1 gap-1.5">
-                        <Label htmlFor="search">Search</Label>
+                        <Label htmlFor="search" className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                            Search
+                        </Label>
                         <div className="relative">
                             <Search
                                 aria-hidden="true"
-                                className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+                                className="text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2"
                             />
                             <Input
                                 id="search"
@@ -143,16 +145,18 @@ export default function UsersIndex({ users, roles, filters, lastActiveAdminId }:
                                 value={search}
                                 onChange={(event) => setSearch(event.target.value)}
                                 placeholder="Name or email address"
-                                className="pl-9"
+                                className="h-11 rounded-lg pl-10"
                                 autoComplete="off"
                             />
                         </div>
                     </div>
 
                     <div className="grid gap-1.5 lg:w-48">
-                        <Label htmlFor="role">Role</Label>
+                        <Label htmlFor="role" className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                            Role
+                        </Label>
                         <Select value={filters.role || ALL} onValueChange={(value) => applyFilters({ role: value === ALL ? '' : value })}>
-                            <SelectTrigger id="role" className="cursor-pointer">
+                            <SelectTrigger id="role" className="h-11 cursor-pointer rounded-lg">
                                 <SelectValue placeholder="All roles" />
                             </SelectTrigger>
                             <SelectContent>
@@ -167,9 +171,11 @@ export default function UsersIndex({ users, roles, filters, lastActiveAdminId }:
                     </div>
 
                     <div className="grid gap-1.5 lg:w-44">
-                        <Label htmlFor="status">Status</Label>
+                        <Label htmlFor="status" className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                            Status
+                        </Label>
                         <Select value={filters.status || ALL} onValueChange={(value) => applyFilters({ status: value === ALL ? '' : value })}>
-                            <SelectTrigger id="status" className="cursor-pointer">
+                            <SelectTrigger id="status" className="h-11 cursor-pointer rounded-lg">
                                 <SelectValue placeholder="All statuses" />
                             </SelectTrigger>
                             <SelectContent>
@@ -181,7 +187,7 @@ export default function UsersIndex({ users, roles, filters, lastActiveAdminId }:
                     </div>
 
                     {hasFilters && (
-                        <Button type="button" variant="ghost" onClick={clearFilters} className="cursor-pointer lg:mb-px">
+                        <Button type="button" variant="ghost" onClick={clearFilters} className="h-11 cursor-pointer rounded-lg lg:mb-px">
                             <X aria-hidden="true" />
                             Clear
                         </Button>

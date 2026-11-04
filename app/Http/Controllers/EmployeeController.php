@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Employees\DeleteEmployeesRequest;
 use App\Http\Requests\Employees\StoreEmployeeRequest;
 use App\Http\Requests\Employees\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
 use App\Models\Employee;
 use App\Models\Office;
+use App\Models\User;
 use App\Services\EmployeeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -144,6 +146,68 @@ class EmployeeController extends Controller
             'success',
             "{$employee->full_name} has been deactivated. Their past leave records are unchanged.",
         );
+    }
+
+    /**
+     * The ticked rows on the masterlist. Soft deletes what it can and reports
+     * what it kept; the rule itself is EmployeeService::deleteMany's.
+     */
+    public function destroyMany(DeleteEmployeesRequest $request): RedirectResponse
+    {
+        $result = $this->employees->deleteMany($request->ids(), $this->user($request));
+
+        $deleted = count($result['deleted']);
+        $kept = count($result['kept']);
+
+        $response = back();
+
+        if ($deleted > 0) {
+            $response->with('success', sprintf(
+                '%d %s removed from the masterlist. An HR Admin can restore %s.',
+                $deleted,
+                $deleted === 1 ? 'employee' : 'employees',
+                $deleted === 1 ? 'the record' : 'them',
+            ));
+        }
+
+        // Not an error the user caused, but it belongs in the red toast: it is
+        // the half of the action that did not happen, and it names who to go
+        // and deactivate instead.
+        if ($kept > 0) {
+            $response->with('error', sprintf(
+                '%d of the ticked %s leave on file and %s kept: %s. Deactivate %s instead, so the tally sheets they appear on keep reading correctly.',
+                $kept,
+                $kept === 1 ? 'employees has' : 'employees have',
+                $kept === 1 ? 'was' : 'were',
+                $this->nameList($result['kept']),
+                $kept === 1 ? 'them' : 'them',
+            ));
+        }
+
+        return $response;
+    }
+
+    /**
+     * Names for a toast: enough to recognise who, without a sentence that
+     * scrolls off the screen when someone ticks the whole page.
+     *
+     * @param  list<string>  $names
+     */
+    private function nameList(array $names): string
+    {
+        $shown = array_slice($names, 0, 4);
+        $rest = count($names) - count($shown);
+
+        return implode('; ', $shown).($rest > 0 ? sprintf(' and %d more', $rest) : '');
+    }
+
+    private function user(Request $request): User
+    {
+        $user = $request->user();
+
+        abort_unless($user instanceof User, 403);
+
+        return $user;
     }
 
     /**

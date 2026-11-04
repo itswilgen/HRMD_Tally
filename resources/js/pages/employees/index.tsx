@@ -1,11 +1,13 @@
-import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataPagination } from '@/components/data-pagination';
+import { DeleteEmployeesDialog } from '@/components/delete-employees-dialog';
+import { EmployeeSelectionBar } from '@/components/employee-selection-bar';
 import { EmptyState } from '@/components/empty-state';
+import { ImportEmployeeCsvDialog } from '@/components/import-employee-csv-dialog';
 import { LetterTabs } from '@/components/letter-tabs';
 import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type EmployeeRecord, type OfficeOption, type Paginated, type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Ellipsis, Pencil, Search, UserPlus, UserRoundCheck, UserRoundX, UsersRound, X } from 'lucide-react';
+import { FileSpreadsheet, Pencil, Search, UserPlus, UsersRound, X } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -40,12 +42,35 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
     const { auth } = usePage<SharedData>().props;
     const reduceMotion = useReducedMotion();
     const [search, setSearch] = useState(filters.search);
-    const [pending, setPending] = useState<EmployeeRecord | null>(null);
-    const [processing, setProcessing] = useState(false);
+    const [importing, setImporting] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
 
     const canSeeSalary = auth.user?.can.viewSalary ?? false;
-    const canDeactivate = auth.user?.can.deactivateEmployees ?? false;
+    // Deleting a record is the same privilege as taking someone off the list,
+    // so HR Staff never see a tick-box at all.
+    const canDelete = auth.user?.can.deactivateEmployees ?? false;
     const hasFilters = filters.search !== '' || filters.letter !== '' || filters.office !== '' || filters.status !== '';
+
+    const pageIds = employees.data.map((employee) => employee.id);
+    const pageKey = pageIds.join(',');
+
+    // Ticks belong to the rows on screen. Changing the search, letter tab, office
+    // or page puts a different set of employees in front of HR, and a selection
+    // carried over would act on names nobody can see any more.
+    useEffect(() => {
+        // Keeps the identity when there is nothing to clear, so arriving on the
+        // page does not cost an extra render.
+        setSelectedIds((current) => (current.length === 0 ? current : []));
+    }, [pageKey]);
+
+    const selectedEmployees = employees.data.filter((employee) => selectedIds.includes(employee.id));
+    const keptCount = selectedEmployees.filter((employee) => (employee.leaveRecordsCount ?? 0) > 0).length;
+    const allOnPageSelected = employees.data.length > 0 && selectedEmployees.length === employees.data.length;
+    const selectAllState = allOnPageSelected ? true : selectedEmployees.length > 0 ? 'indeterminate' : false;
+
+    const toggleRow = (id: number, checked: boolean) =>
+        setSelectedIds((current) => (checked ? [...current, id] : current.filter((candidate) => candidate !== id)));
 
     const applyFilters = (changes: Partial<EmployeeFilters>) => {
         const next = { ...filters, ...changes };
@@ -90,29 +115,6 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
         router.get(route('employees.index'), {}, { preserveState: true, preserveScroll: true, replace: true });
     };
 
-    const reactivate = (employee: EmployeeRecord) => {
-        router.patch(route('employees.activate', employee.id), {}, { preserveScroll: true });
-    };
-
-    const confirmDeactivate = () => {
-        if (!pending) {
-            return;
-        }
-
-        router.patch(
-            route('employees.deactivate', pending.id),
-            {},
-            {
-                preserveScroll: true,
-                onStart: () => setProcessing(true),
-                onFinish: () => {
-                    setProcessing(false);
-                    setPending(null);
-                },
-            },
-        );
-    };
-
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Employees" />
@@ -122,23 +124,43 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                 title="Employees"
                 description="The masterlist the yearly tally sheet is drawn from. Someone who leaves the city government is deactivated, not removed, so the sheets they already appear on keep reading correctly."
                 actions={
-                    <Button asChild>
-                        <Link href={route('employees.create')}>
-                            <UserPlus aria-hidden="true" />
-                            Add employee
-                        </Link>
-                    </Button>
+                    <>
+                        <Button type="button" variant="outline" onClick={() => setImporting(true)} className="cursor-pointer">
+                            <FileSpreadsheet aria-hidden="true" />
+                            Import CSV
+                        </Button>
+                        <Button asChild>
+                            <Link href={route('employees.create')}>
+                                <UserPlus aria-hidden="true" />
+                                Add employee
+                            </Link>
+                        </Button>
+                    </>
                 }
             />
 
-            <section className="bg-card overflow-hidden rounded-xl border">
-                <div className="flex flex-col gap-3 border-b p-4 lg:flex-row lg:items-end">
+            <ImportEmployeeCsvDialog
+                open={importing}
+                onOpenChange={setImporting}
+                adminColumns={[...(auth.user?.can.setEmploymentStatus ? ['Employment Status'] : []), ...(canSeeSalary ? ['Monthly Rate'] : [])]}
+            />
+
+            {/*
+              overflow-clip, not overflow-hidden: both clip the table to the
+              card's rounded corners, but overflow-hidden makes this a scroll
+              container, which would stop the sticky selection bar below from
+              ever sticking to the viewport.
+            */}
+            <section className="border-border/80 bg-card overflow-clip rounded-xl border shadow-xs">
+                <div className="flex flex-col gap-3.5 border-b p-4 lg:flex-row lg:items-end">
                     <div className="grid flex-1 gap-1.5">
-                        <Label htmlFor="search">Search</Label>
+                        <Label htmlFor="search" className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                            Search
+                        </Label>
                         <div className="relative">
                             <Search
                                 aria-hidden="true"
-                                className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+                                className="text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2"
                             />
                             <Input
                                 id="search"
@@ -146,19 +168,21 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                                 value={search}
                                 onChange={(event) => setSearch(event.target.value)}
                                 placeholder="Surname, first name, position or employee no."
-                                className="pl-9"
+                                className="h-11 rounded-lg pl-10"
                                 autoComplete="off"
                             />
                         </div>
                     </div>
 
                     <div className="grid gap-1.5 lg:w-56">
-                        <Label htmlFor="office">Office</Label>
+                        <Label htmlFor="office" className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                            Office
+                        </Label>
                         <Select
                             value={filters.office || ALL}
                             onValueChange={(value) => applyFilters({ office: value === ALL ? '' : value, letter: '' })}
                         >
-                            <SelectTrigger id="office" className="cursor-pointer">
+                            <SelectTrigger id="office" className="h-11 cursor-pointer rounded-lg">
                                 <SelectValue placeholder="All offices" />
                             </SelectTrigger>
                             <SelectContent>
@@ -173,12 +197,14 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                     </div>
 
                     <div className="grid gap-1.5 lg:w-44">
-                        <Label htmlFor="status">Status</Label>
+                        <Label htmlFor="status" className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
+                            Status
+                        </Label>
                         <Select
                             value={filters.status || 'active'}
                             onValueChange={(value) => applyFilters({ status: value === 'active' ? '' : value })}
                         >
-                            <SelectTrigger id="status" className="cursor-pointer">
+                            <SelectTrigger id="status" className="h-11 cursor-pointer rounded-lg">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -190,7 +216,7 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                     </div>
 
                     {hasFilters && (
-                        <Button type="button" variant="ghost" onClick={clearFilters} className="cursor-pointer lg:mb-px">
+                        <Button type="button" variant="ghost" onClick={clearFilters} className="h-11 cursor-pointer rounded-lg lg:mb-px">
                             <X aria-hidden="true" />
                             Clear
                         </Button>
@@ -217,14 +243,20 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                         <EmptyState
                             icon={UsersRound}
                             title="The masterlist is empty"
-                            description="Add the employees this office keeps leave records for. You can encode leave for them once they are on the list."
+                            description="Add the employees this office keeps leave records for, one at a time or the whole masterlist from a CSV file. You can encode leave for them once they are on the list."
                             action={
-                                <Button asChild>
-                                    <Link href={route('employees.create')}>
-                                        <UserPlus aria-hidden="true" />
-                                        Add employee
-                                    </Link>
-                                </Button>
+                                <div className="flex flex-wrap justify-center gap-2">
+                                    <Button type="button" variant="outline" onClick={() => setImporting(true)} className="cursor-pointer">
+                                        <FileSpreadsheet aria-hidden="true" />
+                                        Import CSV
+                                    </Button>
+                                    <Button asChild>
+                                        <Link href={route('employees.create')}>
+                                            <UserPlus aria-hidden="true" />
+                                            Add employee
+                                        </Link>
+                                    </Button>
+                                </div>
                             }
                         />
                     )
@@ -232,6 +264,16 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                {canDelete && (
+                                    <TableHead className="w-10 pr-0">
+                                        <Checkbox
+                                            checked={selectAllState}
+                                            onCheckedChange={(checked) => setSelectedIds(checked === true ? pageIds : [])}
+                                            aria-label={allOnPageSelected ? 'Clear the selection' : 'Select every employee on this page'}
+                                            className="cursor-pointer"
+                                        />
+                                    </TableHead>
+                                )}
                                 <TableHead>Employee</TableHead>
                                 <TableHead className="hidden md:table-cell">Position</TableHead>
                                 <TableHead className="hidden lg:table-cell">Office</TableHead>
@@ -252,8 +294,19 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                                             ? { duration: 0 }
                                             : { duration: 0.2, delay: Math.min(index, 10) * 0.03, ease: [0.22, 1, 0.36, 1] }
                                     }
-                                    className="hover:bg-accent/40 border-b transition-colors last:border-0"
+                                    data-state={selectedIds.includes(employee.id) ? 'selected' : undefined}
+                                    className="hover:bg-accent/40 data-[state=selected]:bg-primary/5 border-b transition-colors last:border-0"
                                 >
+                                    {canDelete && (
+                                        <TableCell className="py-2 pr-0">
+                                            <Checkbox
+                                                checked={selectedIds.includes(employee.id)}
+                                                onCheckedChange={(checked) => toggleRow(employee.id, checked === true)}
+                                                aria-label={`Select ${employee.listName}`}
+                                                className="cursor-pointer"
+                                            />
+                                        </TableCell>
+                                    )}
                                     <TableCell className="py-2">
                                         {/*
                                           The width ceiling is what lets the row
@@ -304,35 +357,13 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                                         </TableCell>
                                     )}
                                     <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon" className="size-8 cursor-pointer">
-                                                    <Ellipsis aria-hidden="true" />
-                                                    <span className="sr-only">Actions for {employee.listName}</span>
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-60">
-                                                <DropdownMenuItem asChild>
-                                                    <Link href={route('employees.edit', employee.id)} className="cursor-pointer">
-                                                        <Pencil aria-hidden="true" />
-                                                        Edit record
-                                                    </Link>
-                                                </DropdownMenuItem>
-
-                                                {canDeactivate &&
-                                                    (employee.isActive ? (
-                                                        <DropdownMenuItem onSelect={() => setPending(employee)} className="cursor-pointer">
-                                                            <UserRoundX aria-hidden="true" />
-                                                            Deactivate
-                                                        </DropdownMenuItem>
-                                                    ) : (
-                                                        <DropdownMenuItem onSelect={() => reactivate(employee)} className="cursor-pointer">
-                                                            <UserRoundCheck aria-hidden="true" />
-                                                            Put back on the list
-                                                        </DropdownMenuItem>
-                                                    ))}
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                        {/* Deactivating lives on the edit page, so editing is the only row action left. */}
+                                        <Button variant="ghost" size="icon" className="size-9 cursor-pointer" asChild>
+                                            <Link href={route('employees.edit', employee.id)} title={`Edit ${employee.listName}`}>
+                                                <Pencil aria-hidden="true" />
+                                                <span className="sr-only">Edit {employee.listName}</span>
+                                            </Link>
+                                        </Button>
                                     </TableCell>
                                 </motion.tr>
                             ))}
@@ -340,30 +371,26 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                     </Table>
                 )}
 
+                {canDelete && (
+                    <EmployeeSelectionBar
+                        selectedCount={selectedEmployees.length}
+                        keptCount={keptCount}
+                        onClear={() => setSelectedIds([])}
+                        onDelete={() => setConfirmingDelete(true)}
+                    />
+                )}
+
                 <DataPagination meta={employees.meta} links={employees.links} label="employees" />
             </section>
 
-            <ConfirmDialog
-                open={pending !== null}
-                onOpenChange={(open) => !open && setPending(null)}
-                processing={processing}
-                title="Take this employee off the list?"
-                confirmLabel="Deactivate"
-                onConfirm={confirmDeactivate}
-                description={
-                    <>
-                        <p>
-                            <span className="text-foreground font-medium">{pending?.fullName}</span> will no longer appear when encoding leave or on
-                            this year&apos;s tally sheet.
-                        </p>
-                        <p>
-                            {pending?.leaveRecordsCount
-                                ? `The ${pending.leaveRecordsCount} leave record${pending.leaveRecordsCount === 1 ? '' : 's'} already encoded for them stay exactly as they are, and you can put them back on the list at any time.`
-                                : 'Nothing is deleted, and you can put them back on the list at any time.'}
-                        </p>
-                    </>
-                }
-            />
+            {canDelete && (
+                <DeleteEmployeesDialog
+                    open={confirmingDelete}
+                    onOpenChange={setConfirmingDelete}
+                    selected={selectedEmployees}
+                    onDeleted={() => setSelectedIds([])}
+                />
+            )}
         </AppLayout>
     );
 }

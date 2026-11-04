@@ -4,23 +4,18 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 const badgeVariants = cva(
-    'inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs font-medium transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2',
+    'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-2xs font-semibold transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2',
     {
         variants: {
             variant: {
-                default: 'border-transparent bg-primary text-primary-foreground',
-                secondary: 'border-transparent bg-secondary text-secondary-foreground',
-                destructive: 'border-transparent bg-destructive text-destructive-foreground',
-                outline: 'text-foreground',
-                /*
-                 * Tinted surfaces rather than solid fills: a table full of
-                 * saturated pills is unreadable, and these have to sit next to
-                 * each other in every row.
-                 */
-                success: 'bg-success-surface text-success border-success/20',
-                warning: 'bg-warning-surface text-warning border-warning/20',
-                danger: 'bg-destructive-surface text-destructive border-destructive/20',
-                muted: 'bg-muted text-muted-foreground border-transparent',
+                default: 'border-transparent bg-primary text-primary-foreground shadow-2xs',
+                secondary: 'border-border/60 bg-secondary/80 text-secondary-foreground',
+                destructive: 'border-transparent bg-destructive text-destructive-foreground shadow-2xs',
+                outline: 'border-border/80 text-foreground',
+                success: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+                warning: 'border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300',
+                danger: 'border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300',
+                muted: 'border-border/50 bg-muted text-muted-foreground',
             },
         },
         defaultVariants: {

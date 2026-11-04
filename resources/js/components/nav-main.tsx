@@ -21,7 +21,7 @@ export function NavMain({ groups }: { groups: NavGroup[] }) {
 
                 return (
                     <SidebarGroup key={group.title} className="px-2 py-0">
-                        <SidebarGroupLabel className="text-sidebar-foreground/50 text-2xs tracking-[0.12em] uppercase">
+                        <SidebarGroupLabel className="text-sidebar-foreground/85 text-2xs tracking-[0.12em] uppercase">
                             {group.title}
                         </SidebarGroupLabel>
                         <SidebarMenu>

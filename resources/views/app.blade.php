@@ -10,7 +10,7 @@
              long records screens. IBM Plex Mono is used only for leave codes,
              counts and dates, where the columns have to line up. --}}
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=public-sans:400,500,600,700|ibm-plex-mono:400,500" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=public-sans:400,500,600,700|ibm-plex-mono:400,500,600" rel="stylesheet" />
 
         @routes
         @viteReactRefresh

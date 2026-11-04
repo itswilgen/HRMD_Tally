@@ -14,7 +14,8 @@
   a later phase) can be retuned from this file alone.
 
   The palette is blue + green on green-tinted neutrals: blue is the one action
-  and focus colour, green means "active / confirmed" and carries the sidebar,
+  and focus colour, green means "active / confirmed" and carries the dark-mode
+  sidebar (the light-mode sidebar is the office blue, #005B99),
   and the greys are warmed towards green so nothing looks like flat #808080.
 */
 @theme {
@@ -126,7 +127,7 @@
     --popover: hsl(0, 0%, 100%);
     --popover-foreground: hsl(172, 34%, 10%);
 
-    --primary: hsl(226, 71%, 45%);
+    --primary: hsl(161, 72%, 26%);
     --primary-foreground: hsl(0, 0%, 100%);
     --secondary: hsl(165, 18%, 94%);
     --secondary-foreground: hsl(172, 30%, 18%);
@@ -150,7 +151,7 @@
 
     --border: hsl(165, 14%, 88%);
     --input: hsl(165, 14%, 83%);
-    --ring: hsl(226, 71%, 45%);
+    --ring: hsl(161, 72%, 32%);
 
     --chart-1: hsl(226, 71%, 52%);
     --chart-2: hsl(160, 72%, 32%);
@@ -183,15 +184,19 @@
     --chip-rose: hsl(350, 55%, 93%);
     --chip-rose-ink: hsl(348, 58%, 28%);
 
-    /* The ink-green sidebar from the tally sheet mockup. */
-    --sidebar-background: hsl(172, 52%, 10%);
-    --sidebar-foreground: hsl(165, 20%, 80%);
-    --sidebar-primary: hsl(158, 62%, 46%);
-    --sidebar-primary-foreground: hsl(172, 55%, 8%);
-    --sidebar-accent: hsl(172, 38%, 16%);
+    /*
+      The blue sidebar, #005B99, in light mode only; dark mode keeps the
+      ink-green one below. The foreground clears 6:1 on the blue, and the
+      muted /85 variants in the sidebar components still clear 4.5:1.
+    */
+    --sidebar-background: #005b99;
+    --sidebar-foreground: hsl(204, 60%, 95%);
+    --sidebar-primary: hsl(0, 0%, 100%);
+    --sidebar-primary-foreground: hsl(204, 100%, 24%);
+    --sidebar-accent: hsl(204, 90%, 23%);
     --sidebar-accent-foreground: hsl(0, 0%, 100%);
-    --sidebar-border: hsl(172, 34%, 18%);
-    --sidebar-ring: hsl(158, 62%, 46%);
+    --sidebar-border: hsl(204, 70%, 40%);
+    --sidebar-ring: hsl(204, 100%, 82%);
 }
 
 .dark {
@@ -202,8 +207,8 @@
     --popover: hsl(172, 20%, 11%);
     --popover-foreground: hsl(165, 14%, 92%);
 
-    --primary: hsl(222, 84%, 67%);
-    --primary-foreground: hsl(224, 60%, 12%);
+    --primary: hsl(158, 62%, 48%);
+    --primary-foreground: hsl(172, 55%, 7%);
     --secondary: hsl(172, 16%, 15%);
     --secondary-foreground: hsl(165, 14%, 92%);
     --muted: hsl(172, 16%, 13%);
@@ -225,7 +230,7 @@
 
     --border: hsl(172, 14%, 18%);
     --input: hsl(172, 14%, 23%);
-    --ring: hsl(222, 84%, 67%);
+    --ring: hsl(158, 62%, 48%);
 
     --chart-1: hsl(222, 84%, 67%);
     --chart-2: hsl(158, 56%, 46%);
@@ -285,6 +290,25 @@
 
         font-size: 0.875rem;
         line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+    }
+
+    /* Premium custom scrollbar styling */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: color-mix(in oklab, var(--foreground) 18%, transparent);
+        border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: color-mix(in oklab, var(--foreground) 30%, transparent);
     }
 
     /* Numbers in this app are read in columns, so they must not jitter. */
@@ -299,6 +323,37 @@
     h3,
     h4 {
         @apply tracking-tight;
+    }
+
+    /* Premium calendar picker indicator for date inputs */
+    input[type='date'] {
+        position: relative;
+    }
+
+    input[type='date']::-webkit-calendar-picker-indicator {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+        background: transparent;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='4' rx='2'%3E%3C/rect%3E%3Cpath d='M8 2v4'%3E%3C/path%3E%3Cpath d='M16 2v4'%3E%3C/path%3E%3Cpath d='M3 10h18'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: contain;
+        opacity: 0.65;
+        transition: all 0.15s ease;
+    }
+
+    input[type='date']::-webkit-calendar-picker-indicator:hover {
+        opacity: 1;
+        transform: translateY(-50%) scale(1.08);
+    }
+
+    .dark input[type='date']::-webkit-calendar-picker-indicator {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='4' rx='2'%3E%3C/rect%3E%3Cpath d='M8 2v4'%3E%3C/path%3E%3Cpath d='M16 2v4'%3E%3C/path%3E%3Cpath d='M3 10h18'%3E%3C/path%3E%3C/svg%3E");
     }
 }
 

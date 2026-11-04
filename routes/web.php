@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\EmployeeImportController;
 use App\Http\Controllers\LeaveRecordController;
 use App\Http\Controllers\TallyController;
 use Illuminate\Support\Facades\Auth;
@@ -44,14 +45,24 @@ Route::middleware(['auth'])->group(function () {
 
     /*
      * The employee masterlist. Both roles maintain it; EmployeePolicy is what
-     * decides, and deactivating is HR Admin only. There is no destroy route:
-     * an employee who leaves is deactivated so their past tallies still read
-     * correctly, which is what the paper sheet did too.
+     * decides, and deactivating is HR Admin only.
+     *
+     * Someone who leaves the city government is deactivated, never deleted, so
+     * their past tallies still read correctly — which is what the paper sheet
+     * did too. bulk-destroy is for the other case: a record created by mistake,
+     * a duplicate, a row imported twice. It soft deletes, it refuses anyone who
+     * already has leave on file, and there is still no route that erases an
+     * employee (EmployeePolicy::forceDelete is false for everyone).
      */
     Route::prefix('employees')->name('employees.')->group(function () {
         Route::get('/', [EmployeeController::class, 'index'])->name('index');
         Route::get('create', [EmployeeController::class, 'create'])->name('create');
         Route::post('/', [EmployeeController::class, 'store'])->name('store');
+        // Before the {employee} routes, so "bulk" is never read as an id.
+        Route::delete('bulk', [EmployeeController::class, 'destroyMany'])->name('bulk-destroy');
+        Route::get('import/template', [EmployeeImportController::class, 'template'])->name('import.template');
+        Route::post('import/preview', [EmployeeImportController::class, 'preview'])->name('import.preview');
+        Route::post('import', [EmployeeImportController::class, 'store'])->name('import.store');
         Route::get('{employee}/edit', [EmployeeController::class, 'edit'])->name('edit');
         Route::patch('{employee}', [EmployeeController::class, 'update'])->name('update');
         Route::patch('{employee}/activate', [EmployeeController::class, 'activate'])->name('activate');

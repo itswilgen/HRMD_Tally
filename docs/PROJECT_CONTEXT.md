@@ -61,6 +61,7 @@ The system has two roles in Phase 1. Employees do not log in.
 | Add, edit, delete leave records | Yes | Yes |
 | Add and edit employees | Yes | Yes |
 | Deactivate employees | Yes | No |
+| Delete an employee record created by mistake | Yes | No |
 | View and set salary rate | Yes | No (answered) |
 | Set employment status | Yes | No (read only) |
 | Print PDF and export Excel | Yes | Yes |
@@ -123,6 +124,14 @@ Each module below lists what the user must be able to do; the Yearly Tally page 
 - **Employment status is blank by default and typed in by an HR Admin** (answered 2026-10-31). HR did not want a fixed list, so no value is assumed: the field is nullable, HR Admin can enter whatever the appointment paper says, and HR Staff see it without being able to change it. Previously entered values are offered as suggestions so spelling stays consistent.
 - List with search, filter by office and status, sorting and pagination.
 - Add, edit and deactivate. Employees are never permanently deleted.
+- **Deleting a record created by mistake** (added 2026-11-04). The masterlist has
+  tick-boxes and a bulk delete for the case deactivating does not cover: a duplicate,
+  a typo, a row imported twice. It is a soft delete, so the record is recoverable and
+  stays in the activity log, and it is HR Admin only (`employees.deactivate`). An
+  employee who **already has leave on file is refused, not deleted** — their days are
+  printed on tally sheets that must keep reading correctly — and the screen names who
+  was kept so HR can deactivate them instead. Nothing erases an employee:
+  `EmployeePolicy::forceDelete` is `false` for everyone and no route exposes it.
 - Import the masterlist from Excel/CSV with a preview and error report before saving.
 
 ### 5.3 Settings (HR Admin)
@@ -339,7 +348,7 @@ The work is built in eight phases, each reviewed before the next starts; target 
 | --- | --- | --- |
 | 1 | Project setup | Laravel React starter kit, migrations, models, enums, fictional seeders |
 | 2 | Roles and users | HR Admin / HR Staff roles, policies, user management |
-| 3 | Employees | Employees CRUD, offices (masterlist import deferred — see below) |
+| 3 | Employees | Employees CRUD, offices, CSV masterlist import (see below) |
 | 4 | Settings | Leave types and holidays pages |
 | 5 | Leave encoding | Add/edit/delete leave, date ranges, half-days, conflict validation |
 | 6 | Yearly tally | Tally page matching the mockup, filters, letter tabs, employee history |
@@ -354,7 +363,7 @@ encoder — fixed-date regular holidays recurring every year, movable ones enter
 already in the schema and in `HolidayCalendar`, so Phase 4 only has to put a page in front of
 them. Phase 4 is next.
 
-The Excel/CSV masterlist import listed under Phase 3 is **deferred, not dropped**. It cannot be built without knowing what the file looks like — which columns exist, how names and offices are written, whether there are merged cells or multiple sheets — and guessing at that would be inventing requirements. It is picked up as soon as HR supplies a sample file (see the open question in section 11).
+The masterlist import under Phase 3 was built on 2026-11-04 **on the system's own CSV template**, not on HR's existing file, which has still not been supplied. HR downloads the template from the Employees page (Employee No, Last Name, First Name, Middle Name, Suffix, Position Title, Office, Salary Grade, plus Employment Status and Monthly Rate for an HR Admin), fills it in, and uploads it. The server checks every row against the same rules as the Add employee form, shows a preview with each row's problems, and saves all rows in one transaction or none. Offices must match an existing office name (case and spacing aside); near matches are never guessed. HR Staff may import, but the two HR Admin columns are ignored for them. Excel (.xlsx) upload and a mapping for HR's own masterlist layout remain open until HR supplies a sample file (see section 11).
 
 ### Each phase is done when
 
@@ -393,7 +402,7 @@ The open questions below must be answered by HR before the tally sheet is truste
 - [ ] What is the complete list of leave codes and their meanings (VL, SL, MFL, SPL, CTO, Wellness, others)? Provisional codes are seeded; HR must confirm before the tally is trusted.
 - [ ] Is there one tally sheet for all offices, or one per office?
 - [ ] Should SG and rate be kept per year (history) or only the current value?
-- [ ] Is there an existing employee masterlist in Excel to import? **Blocking the Phase 3 import feature** — a sample file is needed, not just a yes. Until then employees are added through the form.
+- [ ] Is there an existing employee masterlist in Excel to import? A sample file is still needed. *(2026-11-04: no longer blocking — the import was built on the system's own CSV template, see section 10. A sample would show whether HR's own file can be read directly or needs to be copied into the template.)*
 - [ ] Where will the system be hosted, and is internet available?
 - [ ] Do the COC/CTO figures in section 6 match the city's own HR issuance, not just the national rule?
 

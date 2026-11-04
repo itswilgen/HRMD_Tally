@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Employee;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -58,6 +59,75 @@ class EmployeeService
         $employee->save();
 
         return $employee;
+    }
+
+    /**
+     * Removing records created by mistake, over a ticked selection.
+     *
+     * "Delete" is a soft delete: the row leaves every list but stays in the
+     * table, so an HR Admin can have it back and the activity log still points
+     * at something real (business rule 9). Nothing is ever erased.
+     *
+     * An employee with leave already on file is kept rather than removed. Their
+     * days are printed on tally sheets that must keep reading correctly, and
+     * taking the row away would leave those sheets pointing at nothing;
+     * deactivating is the right tool for someone who has left. The caller gets
+     * their names back so the screen can say who was kept and why.
+     *
+     * One query loads the selection with its leave counts, so ticking fifty
+     * rows costs the same two round trips as ticking one.
+     *
+     * @param  list<int>  $ids
+     * @return array{deleted: list<string>, kept: list<string>}
+     */
+    public function deleteMany(array $ids, User $user): array
+    {
+        $employees = Employee::query()
+            ->withCount('leaveRecords')
+            ->whereIn('id', $ids)
+            ->orderedByName()
+            ->get();
+
+        $kept = [];
+        $removable = [];
+
+        foreach ($employees as $employee) {
+            if ((int) $employee->leave_records_count > 0) {
+                $kept[] = $employee->list_name;
+
+                continue;
+            }
+
+            $removable[] = $employee;
+        }
+
+        if ($removable === []) {
+            return ['deleted' => [], 'kept' => $kept];
+        }
+
+        return DB::transaction(function () use ($removable, $kept, $user): array {
+            $deleted = [];
+
+            foreach ($removable as $employee) {
+                $employee->delete();
+                $deleted[] = $employee->list_name;
+            }
+
+            // The names go in the properties, not just the count: once the row
+            // is soft deleted the log entry is the only place the activity page
+            // can read who it was without resurrecting the record.
+            activity('employee')
+                ->causedBy($user)
+                ->event('deleted')
+                ->withProperties(['count' => count($deleted), 'employees' => $deleted])
+                ->log(sprintf(
+                    'Deleted %d employee %s from the masterlist',
+                    count($deleted),
+                    count($deleted) === 1 ? 'record' : 'records',
+                ));
+
+            return ['deleted' => $deleted, 'kept' => $kept];
+        });
     }
 
     /**

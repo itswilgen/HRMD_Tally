@@ -20,9 +20,9 @@ Colors:
 |---|---|---|
 | bg-page | #F4F5F2 | page background |
 | surface | #FFFFFF | cards, table, inputs |
-| sidebar | #1F3B33 | sidebar background |
-| sidebar-hover | #2A4A41 | sidebar link hover |
-| sidebar-divider | #355A4F | sidebar footer border |
+| sidebar | #005B99 (light) / #1F3B33 (dark) | sidebar background |
+| sidebar-hover | #06456F (light) / #2A4A41 (dark) | sidebar link hover |
+| sidebar-divider | #1F74AD (light) / #355A4F (dark) | sidebar footer border |
 | sidebar-text | #C9D6D0 | sidebar links |
 | sidebar-label | #A9BDB4 | small "HRMD" label |
 | primary | #1F5F4A | primary buttons, current month header, links |
@@ -70,7 +70,9 @@ the sidebar stacks above the content (flex-wrap), never fixed or 100vh.
 
 ### Main content (padding 28px 32px, gap 20px between sections)
 
-1. **Page header** (flex, wraps on small screens, items aligned to bottom):
+1. **Page header** (flex, wraps on small screens). The title row with its action
+   buttons sticks under the top bar while the page scrolls (hairline bottom border once
+   pinned); the breadcrumb/eyebrow and subtitle scroll away:
    - Left: breadcrumb "Leave monitoring › Tally sheet" (13px, muted),
      title "Leave Tally Sheet — {year}" (28px, 700),
      subtitle "Human Resource Management Division · As of {today}" (14px, muted).
