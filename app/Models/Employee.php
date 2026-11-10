@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  *
  * @property int $id
  * @property string $employee_no
+ * @property string|null $item_no the plantilla item this position is, when it holds one
  * @property string $last_name
  * @property string $first_name
  * @property string|null $middle_name
@@ -28,7 +29,7 @@ use Illuminate\Support\Carbon;
  * @property string $position_title
  * @property int|null $salary_grade
  * @property string|null $monthly_rate decimal:2 is cast to string to avoid float rounding
- * @property int $office_id
+ * @property int|null $office_id null until HR assigns one; a plantilla sheet names no office
  * @property string|null $employment_status free text an HR Admin types; null until they do
  * @property bool $is_active
  * @property Carbon|null $created_at
@@ -49,6 +50,7 @@ class Employee extends Model
      */
     protected $fillable = [
         'employee_no',
+        'item_no',
         'last_name',
         'first_name',
         'middle_name',

@@ -22,7 +22,7 @@ export class JsonRequestError extends Error {
  * masterlist add?". Sent as multipart form data, which is the only way a file
  * travels in a fetch body.
  */
-export async function postFile<T>(url: string, fields: Record<string, Blob>, signal?: AbortSignal): Promise<T> {
+export async function postFile<T>(url: string, fields: Record<string, Blob | string>, signal?: AbortSignal): Promise<T> {
     const body = new FormData();
 
     for (const [name, value] of Object.entries(fields)) {

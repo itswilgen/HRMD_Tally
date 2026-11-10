@@ -17,6 +17,7 @@ enum Permission: string
     case ManageLeave = 'leave.manage';
     case ManageEmployees = 'employees.manage';
     case DeactivateEmployees = 'employees.deactivate';
+    case EraseEmployees = 'employees.erase';
     case ViewSalary = 'employees.view_salary';
     case SetEmploymentStatus = 'employees.set_employment_status';
     case GenerateExports = 'exports.generate';
@@ -34,6 +35,7 @@ enum Permission: string
             self::ManageLeave => 'Add, edit and delete leave records',
             self::ManageEmployees => 'Add and edit employees',
             self::DeactivateEmployees => 'Deactivate employees',
+            self::EraseEmployees => 'Erase a deleted employee record permanently',
             self::ViewSalary => 'View salary rate column',
             self::SetEmploymentStatus => 'Set an employee\'s employment status',
             self::GenerateExports => 'Print PDF and export Excel',
@@ -54,6 +56,7 @@ enum Permission: string
             self::ManageLeave => 'manageLeave',
             self::ManageEmployees => 'manageEmployees',
             self::DeactivateEmployees => 'deactivateEmployees',
+            self::EraseEmployees => 'eraseEmployees',
             self::ViewSalary => 'viewSalary',
             self::SetEmploymentStatus => 'setEmploymentStatus',
             self::GenerateExports => 'generateExports',

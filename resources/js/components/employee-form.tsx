@@ -13,6 +13,7 @@ import { type FormEventHandler } from 'react';
  */
 type EmployeeFormData = {
     employee_no: string;
+    item_no: string;
     last_name: string;
     first_name: string;
     middle_name: string;
@@ -39,6 +40,7 @@ export function EmployeeForm({ employee, offices, employmentStatuses, can, submi
 
     const { data, setData, post, patch, transform, errors, processing } = useForm<EmployeeFormData>({
         employee_no: employee?.employeeNo ?? '',
+        item_no: employee?.itemNo ?? '',
         last_name: employee?.lastName ?? '',
         first_name: employee?.firstName ?? '',
         middle_name: employee?.middleName ?? '',
@@ -145,7 +147,24 @@ export function EmployeeForm({ employee, offices, employmentStatuses, can, submi
                         />
                     </FormField>
 
-                    <FormField id="office_id" label="Office" error={errors.office_id}>
+                    <FormField
+                        id="item_no"
+                        label="Item number"
+                        hint="The plantilla item, as HR's masterlist writes it."
+                        optional
+                        error={errors.item_no}
+                    >
+                        <Input
+                            id="item_no"
+                            value={data.item_no}
+                            onChange={(event) => setData('item_no', event.target.value)}
+                            autoComplete="off"
+                            placeholder="1"
+                            data-numeric
+                        />
+                    </FormField>
+
+                    <FormField id="office_id" label="Office" error={errors.office_id} className="sm:col-span-2">
                         <Select value={data.office_id} onValueChange={(value) => setData('office_id', value)}>
                             <SelectTrigger id="office_id" className="cursor-pointer">
                                 <SelectValue placeholder="Choose an office" />

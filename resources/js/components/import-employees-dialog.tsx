@@ -7,11 +7,11 @@ import { AlertCircle, CheckCircle2, Download, FileSpreadsheet, Loader2, Upload }
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { type ChangeEvent, type DragEvent, useRef, useState } from 'react';
 
-interface ImportEmployeeCsvDialogProps {
+interface ImportEmployeesDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    /** The HR Admin columns this user may fill, so the guide matches the template they download. */
-    adminColumns: string[];
+    /** Whether this user may fill the RATE column, so the guide matches their template. */
+    canSeeSalary: boolean;
 }
 
 /** One row as the server read it. Mirrors EmployeeImportService's PreviewRow. */
@@ -20,9 +20,7 @@ interface PreviewRow {
     employeeNo: string;
     name: string;
     positionTitle: string;
-    officeName: string | null;
     salaryGrade: string | null;
-    employmentStatus: string | null;
     errors: string[];
 }
 
@@ -36,7 +34,7 @@ interface ImportPreview {
 /** Enough to scan a file; the counts above the table always cover every row. */
 const MAX_VISIBLE_ROWS = 300;
 
-export function ImportEmployeeCsvDialog({ open, onOpenChange, adminColumns }: ImportEmployeeCsvDialogProps) {
+export function ImportEmployeesDialog({ open, onOpenChange, canSeeSalary }: ImportEmployeesDialogProps) {
     const reduceMotion = useReducedMotion();
     const inputRef = useRef<HTMLInputElement>(null);
     const [file, setFile] = useState<File | null>(null);
@@ -86,11 +84,11 @@ export function ImportEmployeeCsvDialog({ open, onOpenChange, adminColumns }: Im
             setPreview(result);
             setOnlyProblems(result.problemCount > 0);
         } catch (exception) {
-            setError(
-                exception instanceof JsonRequestError && exception.errors.file?.[0]
-                    ? exception.errors.file[0]
-                    : 'The file could not be checked. Please try again.',
-            );
+            // The file is the whole request, so every problem with it that is
+            // not a row's own arrives under 'file'.
+            const message = exception instanceof JsonRequestError ? exception.errors.file?.[0] : undefined;
+
+            setError(message ?? 'The file could not be checked. Please try again.');
         } finally {
             setChecking(false);
         }
@@ -150,74 +148,74 @@ export function ImportEmployeeCsvDialog({ open, onOpenChange, adminColumns }: Im
         <Dialog open={open} onOpenChange={close}>
             <DialogContent className="flex max-h-[92vh] w-[calc(100vw-2rem)] max-w-5xl flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl">
                 <DialogHeader className="border-b px-6 pt-6 pb-4 text-left">
-                    <DialogTitle className="text-lg font-bold">Import employees from CSV</DialogTitle>
-                    <DialogDescription>
-                        Fill in the template, save it as CSV, and choose it here. Nothing is added until you have checked the preview.
-                    </DialogDescription>
+                    <DialogTitle className="text-lg font-bold">Import employees from Excel</DialogTitle>
+                    <DialogDescription>Choose the filled-in sheet. Nothing is added until you have checked the preview.</DialogDescription>
                 </DialogHeader>
 
                 <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-5">
                     <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">
-                        <label
-                            htmlFor="masterlist-file"
-                            onDragOver={(event) => {
-                                event.preventDefault();
-                                setDragging(true);
-                            }}
-                            onDragLeave={() => setDragging(false)}
-                            onDrop={onDrop}
-                            className={cn(
-                                'border-border bg-background flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-5 text-center transition-colors',
-                                'hover:border-primary/60 hover:bg-accent/40 focus-within:ring-ring focus-within:ring-2 focus-within:ring-offset-2',
-                                dragging && 'border-primary bg-accent/60',
-                                busy && 'pointer-events-none opacity-60',
-                            )}
-                        >
-                            <input
-                                ref={inputRef}
-                                id="masterlist-file"
-                                type="file"
-                                accept=".csv,text/csv"
-                                onChange={onFileChange}
-                                disabled={busy}
-                                className="sr-only"
-                            />
-                            {checking ? (
-                                <Loader2 aria-hidden="true" className="text-primary size-6 animate-spin" />
-                            ) : (
-                                <FileSpreadsheet aria-hidden="true" className="text-muted-foreground size-6" />
-                            )}
-                            {file ? (
-                                <>
-                                    <span className="text-sm font-semibold break-all">{file.name}</span>
-                                    <span className="text-muted-foreground text-xs">
-                                        {checking ? 'Checking every row…' : 'Choose or drop another file to replace it'}
-                                    </span>
-                                </>
-                            ) : (
-                                <>
-                                    <span className="text-sm font-semibold">Choose a CSV file</span>
-                                    <span className="text-muted-foreground text-xs">or drop it here · up to 2 MB</span>
-                                </>
-                            )}
-                        </label>
+                        <div className="space-y-4">
+                            <label
+                                htmlFor="masterlist-file"
+                                onDragOver={(event) => {
+                                    event.preventDefault();
+                                    setDragging(true);
+                                }}
+                                onDragLeave={() => setDragging(false)}
+                                onDrop={onDrop}
+                                className={cn(
+                                    'border-border bg-background flex min-h-40 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed p-5 text-center transition-colors',
+                                    'hover:border-primary/60 hover:bg-accent/40 focus-within:ring-ring focus-within:ring-2 focus-within:ring-offset-2',
+                                    dragging && 'border-primary bg-accent/60',
+                                    busy && 'pointer-events-none opacity-60',
+                                )}
+                            >
+                                <input
+                                    ref={inputRef}
+                                    id="masterlist-file"
+                                    type="file"
+                                    accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+                                    onChange={onFileChange}
+                                    disabled={busy}
+                                    className="sr-only"
+                                />
+                                {checking ? (
+                                    <Loader2 aria-hidden="true" className="text-primary size-6 animate-spin" />
+                                ) : (
+                                    <FileSpreadsheet aria-hidden="true" className="text-muted-foreground size-6" />
+                                )}
+                                {file ? (
+                                    <>
+                                        <span className="text-sm font-semibold break-all">{file.name}</span>
+                                        <span className="text-muted-foreground text-xs">
+                                            {checking ? 'Checking every row…' : 'Choose or drop another file to replace it'}
+                                        </span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="text-sm font-semibold">Choose the Excel file</span>
+                                        <span className="text-muted-foreground text-xs">or drop it here · .xlsx or .csv · up to 2 MB</span>
+                                    </>
+                                )}
+                            </label>
+                        </div>
 
                         <div className="bg-muted/40 space-y-3 rounded-lg border p-4 text-xs">
                             <div className="space-y-1">
                                 <p className="text-sm font-semibold">Columns</p>
                                 <p className="text-muted-foreground">
-                                    Required: <span className="text-foreground">Employee No, Last Name, First Name, Position Title, Office</span>
+                                    Required: <span className="text-foreground">LAST NAME, FIRST NAME, POSITION TITLE</span>
                                 </p>
-                                <p className="text-muted-foreground">
-                                    Optional: Middle Name, Suffix, Salary Grade
-                                    {adminColumns.map((column) => `, ${column}`).join('')}
-                                </p>
+                                <p className="text-muted-foreground">Optional: MIDDLE NAME, SG{canSeeSalary ? ', RATE' : ''}</p>
                             </div>
-                            <p className="text-muted-foreground">Write the office exactly as it is named under Settings → Offices.</p>
+                            <p className="text-muted-foreground">
+                                NO. and ITEM NO. are ignored, and employee numbers are issued by the system when you save. The office and item number
+                                are not imported — fill those in on the employee&rsquo;s page afterwards.
+                            </p>
                             <Button variant="outline" size="sm" asChild className="w-full">
                                 <a href={route('employees.import.template')} download>
                                     <Download aria-hidden="true" />
-                                    Download template
+                                    Download Excel template
                                 </a>
                             </Button>
                         </div>
@@ -247,7 +245,7 @@ export function ImportEmployeeCsvDialog({ open, onOpenChange, adminColumns }: Im
                                         <span className="text-success font-semibold" data-numeric>
                                             {preview.readyCount}
                                         </span>{' '}
-                                        ready
+                                        ready to add
                                         {preview.problemCount > 0 && (
                                             <>
                                                 <span className="text-muted-foreground"> · </span>
@@ -304,9 +302,6 @@ export function ImportEmployeeCsvDialog({ open, onOpenChange, adminColumns }: Im
                                                 <th scope="col" className="hidden px-3 py-2.5 md:table-cell">
                                                     Position
                                                 </th>
-                                                <th scope="col" className="hidden px-3 py-2.5 lg:table-cell">
-                                                    Office
-                                                </th>
                                                 <th scope="col" className="hidden w-12 px-3 py-2.5 text-right sm:table-cell">
                                                     SG
                                                 </th>
@@ -339,8 +334,7 @@ export function ImportEmployeeCsvDialog({ open, onOpenChange, adminColumns }: Im
                                                                         {row.name || <span className="text-muted-foreground italic">No name</span>}
                                                                     </p>
                                                                     <p className="text-muted-foreground text-xs" data-numeric>
-                                                                        {row.employeeNo || '—'}
-                                                                        {row.employmentStatus && <span> · {row.employmentStatus}</span>}
+                                                                        {row.employeeNo}
                                                                     </p>
                                                                     {!ok && (
                                                                         <ul className="text-destructive mt-1.5 space-y-0.5 text-xs">
@@ -353,9 +347,6 @@ export function ImportEmployeeCsvDialog({ open, onOpenChange, adminColumns }: Im
                                                             </div>
                                                         </td>
                                                         <td className="hidden px-3 py-2.5 align-top md:table-cell">{row.positionTitle || '—'}</td>
-                                                        <td className="text-muted-foreground hidden px-3 py-2.5 align-top lg:table-cell">
-                                                            {row.officeName ?? '—'}
-                                                        </td>
                                                         <td className="hidden px-3 py-2.5 text-right align-top sm:table-cell" data-numeric>
                                                             {row.salaryGrade ?? '—'}
                                                         </td>

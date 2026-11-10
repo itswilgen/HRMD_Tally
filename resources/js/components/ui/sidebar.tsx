@@ -285,7 +285,9 @@ const SidebarInset = React.forwardRef<HTMLDivElement, React.ComponentProps<'main
                 // flex child defaults to min-width:auto, so without it the
                 // table's min-content width pushes the whole page sideways
                 // instead of scrolling in the container that has overflow-x.
-                'relative flex min-h-svh min-w-0 flex-1 flex-col bg-background',
+                // bg-page, not bg-background: this element IS the page canvas,
+                // the dim surface the cards and tally sheet sit on.
+                'relative flex min-h-svh min-w-0 flex-1 flex-col bg-page',
                 'peer-data-[variant=inset]:min-h-[calc(100svh-(--spacing(4)))] md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm',
                 className,
             )}

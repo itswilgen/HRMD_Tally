@@ -17,7 +17,7 @@ import { type BreadcrumbItem as BreadcrumbItemType } from '@/types';
  */
 export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItemType[] }) {
     return (
-        <header className="bg-background sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b px-4 md:px-6">
+        <header className="bg-page sticky top-0 z-10 flex h-14 shrink-0 items-center justify-between border-b px-4 md:px-6">
             <div className="flex min-w-0 items-center gap-2">
                 <SidebarTrigger className="hover:bg-muted -ml-1.5 cursor-pointer rounded-lg p-1.5 transition-colors" />
                 <div className="bg-border mx-1 h-5 w-px" aria-hidden="true" />

@@ -63,7 +63,9 @@ export function PageHeader({ eyebrow, title, description, actions, className }: 
                 ref={bar}
                 data-stuck={stuck}
                 className={cn(
-                    'bg-background sticky top-14 z-[9] -mx-4 flex flex-col gap-3 border-b border-transparent px-4 py-2.5 md:-mx-6 md:px-6',
+                    // bg-page so the pinned title bar is the canvas scrolling
+                    // under itself, not a white band crossing the dim page.
+                    'bg-page sticky top-14 z-[9] -mx-4 flex flex-col gap-3 border-b border-transparent px-4 py-2.5 md:-mx-6 md:px-6',
                     'data-[stuck=true]:border-border transition-colors duration-150 motion-reduce:transition-none',
                     'sm:flex-row sm:items-center sm:justify-between',
                     className,

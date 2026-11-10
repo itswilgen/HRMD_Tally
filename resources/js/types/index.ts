@@ -9,6 +9,7 @@ export type PermissionKey =
     | 'manageLeave'
     | 'manageEmployees'
     | 'deactivateEmployees'
+    | 'eraseEmployees'
     | 'viewSalary'
     | 'setEmploymentStatus'
     | 'generateExports'
@@ -54,6 +55,8 @@ export interface UserAccount {
 export interface EmployeeRecord {
     id: number;
     employeeNo: string;
+    /** The plantilla item this position is, when it holds one. */
+    itemNo: string | null;
     lastName: string;
     firstName: string;
     middleName: string | null;
@@ -66,9 +69,11 @@ export interface EmployeeRecord {
     salaryGrade: number | null;
     /** Free text an HR Admin types; null until they do. */
     employmentStatus: string | null;
-    officeId: number;
+    officeId: number | null;
     officeName?: string;
     isActive: boolean;
+    /** Set only on the deleted records list: when the row was deleted. */
+    deletedAt: string | null;
     /** Present when the page asked for it; above zero the record has history. */
     leaveRecordsCount?: number;
     /**

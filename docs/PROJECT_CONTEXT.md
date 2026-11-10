@@ -62,6 +62,7 @@ The system has two roles in Phase 1. Employees do not log in.
 | Add and edit employees | Yes | Yes |
 | Deactivate employees | Yes | No |
 | Delete an employee record created by mistake | Yes | No |
+| Erase a deleted employee record permanently | Yes | No |
 | View and set salary rate | Yes | No (answered) |
 | Set employment status | Yes | No (read only) |
 | Print PDF and export Excel | Yes | Yes |
@@ -130,8 +131,31 @@ Each module below lists what the user must be able to do; the Yearly Tally page 
   stays in the activity log, and it is HR Admin only (`employees.deactivate`). An
   employee who **already has leave on file is refused, not deleted** — their days are
   printed on tally sheets that must keep reading correctly — and the screen names who
-  was kept so HR can deactivate them instead. Nothing erases an employee:
-  `EmployeePolicy::forceDelete` is `false` for everyone and no route exposes it.
+  was kept so HR can deactivate them instead.
+- **Restoring a deleted record** (added 2026-11-09). The Status filter has a
+  **Deleted records** option, HR Admin only, listing what has been deleted with the
+  date it went. Restore puts a record back exactly as it was, active or deactivated;
+  deleting is only safe to offer because restoring exists.
+- **Erasing a record permanently** (added 2026-11-09, at HR's request). The one
+  exception to "nothing is ever erased", and the only irreversible action in the
+  system, so it is hedged four ways:
+  1. It is **its own permission** (`employees.erase`, HR Admin only), not bundled
+     into `employees.deactivate` — being trusted to take a row off the masterlist is
+     not being trusted to destroy it, and HR can withhold this one on its own.
+  2. It reaches **only records that are already deleted**. There is no route from the
+     live masterlist; an id that is not soft-deleted fails validation. Erasing is
+     therefore always a second decision, taken after the first one, about a row
+     someone has already deleted.
+  3. An employee with **leave on file is refused**, checked again at erase time, for
+     the same reason deleting refuses them: their days are printed on tally sheets
+     that must keep reading correctly.
+  4. The **activity log keeps the names**, employee numbers and who erased them. That
+     entry is all that is left of the record, which is also why erasing is capped at
+     50 rows per request and asks for the word `ERASE` to be typed.
+
+  Erasing frees the employee number for reissue, which is safe only because of (3):
+  a number is dangerous to reuse when a leave history hangs off it, and an erased
+  record has none.
 - Import the masterlist from Excel/CSV with a preview and error report before saving.
 
 ### 5.3 Settings (HR Admin)
@@ -190,7 +214,7 @@ These rules are enforced on the server and covered by automated tests.
 6. **One source of truth.** Tally text and totals are built only by the backend tally service, so the screen, PDF and Excel always match.
 7. **Inactive employees** stay in past years' tallies and are hidden from encoding and from the current year by default.
 8. **Leave types** are managed in Settings, not hardcoded. A leave type that has records can be deactivated but not deleted.
-9. **Soft deletes.** Deleted leave records and employees are recoverable and recorded in the activity log.
+9. **Soft deletes.** Deleted leave records and employees are recoverable and recorded in the activity log. The one exception is the permanent erase in section 5.2, which is a separate HR Admin permission, reaches only records that are already deleted and never a record with leave on file.
 10. **Year boundaries.** A range crossing December 31 is split into its proper years automatically.
 
 ### CTO and COCs (answered 2026-10-31)
@@ -212,7 +236,7 @@ Five core tables hold the data; `leave_records` stores one row per leave day, wh
 | Table | Key columns | Notes |
 | --- | --- | --- |
 | `offices` | id, name | Offices/departments, e.g. Office of the City Mayor |
-| `employees` | id, employee_no (unique), last_name, first_name, middle_name, suffix, position_title, salary_grade, monthly_rate, office_id, employment_status (nullable), is_active, timestamps, deleted_at | Never hard-deleted. `employment_status` is free text an HR Admin types, blank until then |
+| `employees` | id, employee_no (unique), item_no (nullable), last_name, first_name, middle_name, suffix, position_title, salary_grade, monthly_rate, office_id, employment_status (nullable), is_active, timestamps, deleted_at | Never hard-deleted. `employment_status` is free text an HR Admin types, blank until then. `item_no` is the plantilla item from HR's own sheet; it is not unique and is not an identifier, because an item is handed on to whoever fills the position next while `employee_no` stays with one person for as long as their leave history does |
 | `leave_types` | id, code (unique), name, color, is_active, sort_order | Managed by HR Admin |
 | `leave_records` | id, employee_id, leave_type_id, leave_date, day_part (WHOLE/AM/PM), remarks, encoded_by, timestamps, deleted_at | One row per leave day |
 | `holidays` | id, date (unique), name, kind, recurs_yearly | Skipped in date ranges. `recurs_yearly` marks the seven fixed-date regular holidays, matched on month and day so they are entered once instead of every year; `kind` separates regular from special non-working |
@@ -348,7 +372,7 @@ The work is built in eight phases, each reviewed before the next starts; target 
 | --- | --- | --- |
 | 1 | Project setup | Laravel React starter kit, migrations, models, enums, fictional seeders |
 | 2 | Roles and users | HR Admin / HR Staff roles, policies, user management |
-| 3 | Employees | Employees CRUD, offices, CSV masterlist import (see below) |
+| 3 | Employees | Employees CRUD, offices, Excel/CSV masterlist import on HR's plantilla layout (see below) |
 | 4 | Settings | Leave types and holidays pages |
 | 5 | Leave encoding | Add/edit/delete leave, date ranges, half-days, conflict validation |
 | 6 | Yearly tally | Tally page matching the mockup, filters, letter tabs, employee history |
@@ -363,7 +387,23 @@ encoder — fixed-date regular holidays recurring every year, movable ones enter
 already in the schema and in `HolidayCalendar`, so Phase 4 only has to put a page in front of
 them. Phase 4 is next.
 
-The masterlist import under Phase 3 was built on 2026-11-04 **on the system's own CSV template**, not on HR's existing file, which has still not been supplied. HR downloads the template from the Employees page (Employee No, Last Name, First Name, Middle Name, Suffix, Position Title, Office, Salary Grade, plus Employment Status and Monthly Rate for an HR Admin), fills it in, and uploads it. The server checks every row against the same rules as the Add employee form, shows a preview with each row's problems, and saves all rows in one transaction or none. Offices must match an existing office name (case and spacing aside); near matches are never guessed. HR Staff may import, but the two HR Admin columns are ignored for them. Excel (.xlsx) upload and a mapping for HR's own masterlist layout remain open until HR supplies a sample file (see section 11).
+The masterlist import under Phase 3 was built on 2026-11-04 on the system's own template, became a formatted `.xlsx` on 2026-11-09, and later that same day was **rebuilt on HR's real plantilla layout**, which HR supplied as a screenshot of their working sheet. The headings are now HR's own, in HR's own order:
+
+`NO.` · `ITEM NO.` · `LAST NAME` · `FIRST NAME` · `MIDDLE NAME` · `POSITION TITLE` · `SG` · `RATE` · `OFFICE`
+
+The first eight are the official headings, taken from the sheet HR works in; the system's template matches them exactly rather than the other way round. `OFFICE` is the one column the system adds, and it goes last so the official part of a sheet HR already keeps can be pasted straight in. Only `LAST NAME`, `FIRST NAME`, `POSITION TITLE` and `OFFICE` are required. `NO.` is read and ignored — it numbers the printed page and means nothing to the system. `RATE` is ignored for HR Staff, who never see a rate, and is left off the template they download.
+
+Columns are matched by heading **name, not position**, which is what lets HR's own file be imported untouched: their working sheet has a hidden column between `SG` and `RATE` (so the rate sits in column I), leaves `ITEM NO.` blank on every row, and types rates as text — `13,846.00`, which is what the green "number stored as text" flags in it are. All three are handled, and the whole shape is pinned by the test *"it reads HR's own sheet as HR keeps it"*.
+
+HR's sheet is missing three things the system needs, and each is filled from somewhere other than the official columns rather than guessed at:
+
+- **Office** is a column HR adds to the sheet — `OFFICE`, after the official headings — so the whole workflow is choose a file and nothing else; there is no office control in the import dialog. One file may therefore span several offices, and each row is filed under the office its own row names. The name is matched against the offices on record ignoring case, spacing and punctuation, and on nothing else: a near miss is never taken as a match, because filing somebody under the wrong office quietly is worse than making HR correct a cell. An unknown name is reported as that row's problem, and the downloadable template offers the offices as an Excel dropdown (read from a hidden `Offices` sheet, since a list typed into the validation rule itself is capped at 255 characters) so the typo is hard to make in the first place.
+- **Employee number** is issued by the system, in sequence after the highest `YYYY-NNNNN` already used this year. It is deliberately *not* taken from `ITEM NO.`: an item belongs to the position and is refilled when its holder leaves, so using it as the employee number would eventually file one person's leave under another's name. The item is stored as `item_no` in its own right.
+- **Suffix** and **employment status** are not in HR's sheet at all and are left blank, to be filled in on the employee's page from the appointment paper.
+
+Because employee numbers no longer come from the file, "this sheet has already been imported" is detected by identity instead: a row whose last, first and middle name *and* position title match someone already on the masterlist **in the office their row names** is flagged. Name alone would flag the two Dela Cruzes every city payroll has; name and position together is what a sheet imported twice looks like and little else does. Rows are also checked against each other, and duplicate `ITEM NO.` values within the file are flagged separately.
+
+The rest of the mechanics are unchanged. The server checks every row against the same rules as the Add employee form, shows a preview with each row's problems, and saves all rows in one transaction or none. The heading row is found by scanning the first ten non-blank rows, so a printed plantilla's title block ("CITY GOVERNMENT OF …", "PLANTILLA OF PERSONNEL") does not have to be deleted first; blank rows are skipped without renumbering, so "row 7 has a problem" points at row 7 as HR sees it in Excel. The template is a formatted `.xlsx` with the heading row bold and frozen and the `ITEM NO.` column formatted as text, because an item is written `1` in one office and `OSEC-DOH-ADAS2-5-2014` in another. The format is decided by the file's first four bytes, not its name, so a workbook saved as `.csv` still reads; only the lifting of rows out of the file differs between the two formats — `EmployeeImportService::readWorkbook()` and `readCsv()` both return rows of text keyed by the row number HR sees in Excel, and every check past that point is shared. Only the first sheet of a workbook is ever read, so neither the template's hidden `Offices` sheet nor the sheet-per-office HR's own workbooks carry can be imported by accident.
 
 ### Each phase is done when
 
@@ -396,13 +436,13 @@ The open questions below must be answered by HR before the tally sheet is truste
 - [x] **Is CTO recorded as whole/half days, or in hours?** Earned in hours as COCs, spent in 4- or 8-hour blocks — which map onto the existing half day / whole day. *(2026-10-31 → section 6)*
 - [x] **Which holidays recur, and which are set yearly?** Seven fixed-date regular holidays recur; movable regular holidays and special non-working days are entered per year. *(2026-10-31 → section 5.3)*
 - [x] **What should the PDF footer show?** A signatory block an HR Admin maintains — name, position and the line each person signs under. *(2026-10-31 → section 5.7)*
+- [x] **Is there an existing employee masterlist in Excel to import, and can its layout be mapped?** Yes — a plantilla sheet headed NO. · ITEM NO. · LAST NAME · FIRST NAME · MIDDLE NAME · POSITION TITLE · SG · RATE. It maps directly; the import was rebuilt on it. HR adds an `OFFICE` column after those headings (a dropdown in the template), the employee number is issued by the system, and suffix and employment status are filled in afterwards. *(2026-11-09 → section 10)*
 
 ### Still open
 
 - [ ] What is the complete list of leave codes and their meanings (VL, SL, MFL, SPL, CTO, Wellness, others)? Provisional codes are seeded; HR must confirm before the tally is trusted.
 - [ ] Is there one tally sheet for all offices, or one per office?
 - [ ] Should SG and rate be kept per year (history) or only the current value?
-- [ ] Is there an existing employee masterlist in Excel to import? A sample file is still needed. *(2026-11-04: no longer blocking — the import was built on the system's own CSV template, see section 10. A sample would show whether HR's own file can be read directly or needs to be copied into the template.)*
 - [ ] Where will the system be hosted, and is internet available?
 - [ ] Do the COC/CTO figures in section 6 match the city's own HR issuance, not just the national rule?
 

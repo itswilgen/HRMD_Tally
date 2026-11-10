@@ -28,6 +28,7 @@ class EmployeeResource extends JsonResource
         return [
             'id' => $this->resource->id,
             'employeeNo' => $this->resource->employee_no,
+            'itemNo' => $this->resource->item_no,
             'lastName' => $this->resource->last_name,
             'firstName' => $this->resource->first_name,
             'middleName' => $this->resource->middle_name,
@@ -44,10 +45,16 @@ class EmployeeResource extends JsonResource
             'officeId' => $this->resource->office_id,
 
             // whenLoaded, so a page that forgot to eager load the office gets a
-            // missing name rather than one query per row.
-            'officeName' => $this->whenLoaded('office', fn () => $this->resource->office->name),
+            // missing name rather than one query per row. Null where the record
+            // has no office yet, which is how an imported employee arrives.
+            'officeName' => $this->whenLoaded('office', fn () => $this->resource->office?->name),
 
             'isActive' => $this->resource->is_active,
+
+            // Null for everyone on the masterlist; a date only on the deleted
+            // records list, where the row says how long it has been in the bin.
+            'deletedAt' => $this->resource->deleted_at?->toIso8601String(),
+
             'leaveRecordsCount' => $this->when(
                 $this->resource->leave_records_count !== null,
                 fn (): int => (int) $this->resource->leave_records_count,

@@ -19,3 +19,4 @@ Read `docs/PROJECT_CONTEXT.md` before any work. It is the source of truth for th
 - Each phase: Pest tests pass, Pint + Larastan + TypeScript checks are clean, then summarize what changed.
 - Open questions in section 11 are unresolved: ask instead of guessing.
 - Never drop tables, delete data or run destructive commands without asking first.
+

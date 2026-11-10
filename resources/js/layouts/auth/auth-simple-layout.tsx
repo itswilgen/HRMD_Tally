@@ -11,7 +11,7 @@ interface AuthLayoutProps {
 
 export default function AuthSimpleLayout({ children, title, description }: AuthLayoutProps) {
     return (
-        <div className="bg-background relative flex min-h-svh flex-col items-center justify-center overflow-hidden p-4 sm:p-8">
+        <div className="bg-page relative flex min-h-svh flex-col items-center justify-center overflow-hidden p-4 sm:p-8">
             {/* Ambient luxury lighting */}
             <div aria-hidden="true" className="bg-primary/10 pointer-events-none absolute -top-40 -left-40 size-96 rounded-full blur-3xl" />
             <div aria-hidden="true" className="pointer-events-none absolute -right-40 -bottom-40 size-96 rounded-full bg-emerald-500/10 blur-3xl" />

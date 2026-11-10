@@ -45,10 +45,11 @@ class EmployeePolicy
     }
 
     /**
-     * Employees are never hard-deleted, so "delete" means soft-delete: the row
-     * leaves the lists and its leave history stays intact. It is for a record
-     * created by mistake — a duplicate, a typo imported twice — not for someone
-     * who has left the city government, who is deactivated instead.
+     * "Delete" means soft-delete: the row leaves the lists and its leave
+     * history stays intact. It is for a record created by mistake — a
+     * duplicate, a typo imported twice — not for someone who has left the city
+     * government, who is deactivated instead. Erasing such a row for good is
+     * forceDelete below, which is a different permission.
      */
     public function delete(User $user, Employee $employee): bool
     {
@@ -74,12 +75,40 @@ class EmployeePolicy
     }
 
     /**
-     * Nobody may erase an employee: the leave records point at them, and the
-     * paper sheet they replace was never thrown away either.
+     * Reading the deleted records at all, which is its own question: the list
+     * holds names HR has already taken off the masterlist, and only the role
+     * that can put them back or erase them has a reason to see it.
+     */
+    public function viewTrashed(User $user): bool
+    {
+        return $user->can(Permission::DeactivateEmployees->value);
+    }
+
+    /**
+     * Erasing a record for good, which is the one thing in this system that
+     * cannot be undone, so it is deliberately narrow.
+     *
+     * It is a separate permission from deleting rather than the same one: an
+     * HR Admin who may take a mistaken row off the masterlist has not thereby
+     * been trusted to destroy it, and HR can withhold this one on its own.
+     *
+     * Only a record that is already soft deleted may go. The live masterlist
+     * offers no route to it, so erasing is always the second of two decisions
+     * taken at two different times, and an employee with leave on file is
+     * refused here as well — see EmployeeService::eraseMany.
      */
     public function forceDelete(User $user, Employee $employee): bool
     {
-        return false;
+        return $user->can(Permission::EraseEmployees->value) && $employee->trashed();
+    }
+
+    /**
+     * The tick-boxes on the deleted records list. As with deleteMany, asked
+     * once for the batch; which rows may actually go is the service's call.
+     */
+    public function forceDeleteMany(User $user): bool
+    {
+        return $user->can(Permission::EraseEmployees->value);
     }
 
     /**

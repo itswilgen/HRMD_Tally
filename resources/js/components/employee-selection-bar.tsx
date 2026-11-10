@@ -1,11 +1,18 @@
 import { Button } from '@/components/ui/button';
-import { Trash2, X } from 'lucide-react';
+import { OctagonAlert, Trash2, X } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 
 interface EmployeeSelectionBarProps {
     selectedCount: number;
     /** How many of the ticked rows have leave on file and will be kept. */
     keptCount: number;
+    /**
+     * Which list the ticks are on. 'delete' is the masterlist, where the action
+     * is a recoverable soft delete; 'erase' is the deleted records, where it
+     * destroys the row. The wording has to differ, because "Delete" on a list
+     * of already deleted records would mean nothing.
+     */
+    mode?: 'delete' | 'erase';
     onClear: () => void;
     onDelete: () => void;
 }
@@ -18,9 +25,10 @@ interface EmployeeSelectionBarProps {
  * the list you have scrolled, and no row ever moves under the pointer while
  * someone is still ticking boxes.
  */
-export function EmployeeSelectionBar({ selectedCount, keptCount, onClear, onDelete }: EmployeeSelectionBarProps) {
+export function EmployeeSelectionBar({ selectedCount, keptCount, mode = 'delete', onClear, onDelete }: EmployeeSelectionBarProps) {
     const reduceMotion = useReducedMotion();
     const deletableCount = selectedCount - keptCount;
+    const erasing = mode === 'erase';
 
     return (
         <AnimatePresence>
@@ -42,7 +50,8 @@ export function EmployeeSelectionBar({ selectedCount, keptCount, onClear, onDele
                 >
                     <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium" aria-live="polite">
-                            <span data-numeric>{selectedCount}</span> {selectedCount === 1 ? 'employee' : 'employees'} selected
+                            <span data-numeric>{selectedCount}</span>{' '}
+                            {erasing ? (selectedCount === 1 ? 'record' : 'records') : selectedCount === 1 ? 'employee' : 'employees'} selected
                         </p>
                         {keptCount > 0 && (
                             <p className="text-muted-foreground mt-0.5 text-xs">
@@ -50,7 +59,7 @@ export function EmployeeSelectionBar({ selectedCount, keptCount, onClear, onDele
                                 {deletableCount > 0 && (
                                     <>
                                         {' · '}
-                                        <span data-numeric>{deletableCount}</span> can be deleted
+                                        <span data-numeric>{deletableCount}</span> can be {erasing ? 'erased' : 'deleted'}
                                     </>
                                 )}
                             </p>
@@ -63,8 +72,10 @@ export function EmployeeSelectionBar({ selectedCount, keptCount, onClear, onDele
                             Clear
                         </Button>
                         <Button type="button" variant="destructive" onClick={onDelete} disabled={deletableCount === 0} className="cursor-pointer">
-                            <Trash2 aria-hidden="true" />
-                            Delete{deletableCount > 0 && <span data-numeric> {deletableCount}</span>}
+                            {erasing ? <OctagonAlert aria-hidden="true" /> : <Trash2 aria-hidden="true" />}
+                            {erasing ? 'Erase' : 'Delete'}
+                            {deletableCount > 0 && <span data-numeric> {deletableCount}</span>}
+                            {erasing && ' permanently'}
                         </Button>
                     </div>
                 </motion.div>

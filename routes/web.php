@@ -50,9 +50,15 @@ Route::middleware(['auth'])->group(function () {
      * Someone who leaves the city government is deactivated, never deleted, so
      * their past tallies still read correctly — which is what the paper sheet
      * did too. bulk-destroy is for the other case: a record created by mistake,
-     * a duplicate, a row imported twice. It soft deletes, it refuses anyone who
-     * already has leave on file, and there is still no route that erases an
-     * employee (EmployeePolicy::forceDelete is false for everyone).
+     * a duplicate, a row imported twice. It soft deletes and it refuses anyone
+     * who already has leave on file.
+     *
+     * erase is the one route that destroys a record, and it is reachable only
+     * from the deleted records list: an id that is still on the live masterlist
+     * fails validation, so erasing is always a second decision about a row
+     * someone already deleted. It needs employees.erase, which is its own
+     * permission, and it refuses leave on file as well. restore is the other
+     * half of that screen and the reason deleting is safe to offer.
      */
     Route::prefix('employees')->name('employees.')->group(function () {
         Route::get('/', [EmployeeController::class, 'index'])->name('index');
@@ -60,6 +66,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', [EmployeeController::class, 'store'])->name('store');
         // Before the {employee} routes, so "bulk" is never read as an id.
         Route::delete('bulk', [EmployeeController::class, 'destroyMany'])->name('bulk-destroy');
+        Route::delete('erase', [EmployeeController::class, 'eraseMany'])->name('erase');
         Route::get('import/template', [EmployeeImportController::class, 'template'])->name('import.template');
         Route::post('import/preview', [EmployeeImportController::class, 'preview'])->name('import.preview');
         Route::post('import', [EmployeeImportController::class, 'store'])->name('import.store');
@@ -67,6 +74,9 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('{employee}', [EmployeeController::class, 'update'])->name('update');
         Route::patch('{employee}/activate', [EmployeeController::class, 'activate'])->name('activate');
         Route::patch('{employee}/deactivate', [EmployeeController::class, 'deactivate'])->name('deactivate');
+        // withTrashed, or the binding would 404 on the only kind of employee
+        // this route is ever asked about.
+        Route::patch('{employee}/restore', [EmployeeController::class, 'restore'])->name('restore')->withTrashed();
     });
 });
 

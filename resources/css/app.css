@@ -34,6 +34,15 @@
     --color-background: var(--background);
     --color-foreground: var(--foreground);
 
+    /*
+      The page canvas — UI_SPEC's `bg-page`, the dim surface the white cards and
+      tables sit on. Deliberately NOT --background: that token is the fill for
+      inputs, outline buttons and dialogs, so dimming it would grey out every
+      filter field instead of the paper behind them. Only the layout chrome
+      (body, the sidebar inset, the two sticky bars, the auth canvas) wears it.
+    */
+    --color-page: var(--page);
+
     --color-card: var(--card);
     --color-card-foreground: var(--card-foreground);
 
@@ -122,6 +131,14 @@
 :root {
     --background: hsl(165, 20%, 98%);
     --foreground: hsl(172, 34%, 10%);
+
+    /*
+      UI_SPEC sets the page at #F4F5F2 against #FFFFFF cards. That lightness
+      (95.5%) is kept, but at the palette's own green hue rather than the
+      spec's yellow-green, so the interface keeps one neutral family. The step
+      to a white card is 1.09:1 — a sheet of paper on a desk, not a box.
+    */
+    --page: hsl(165, 16%, 95.5%);
     --card: hsl(0, 0%, 100%);
     --card-foreground: hsl(172, 34%, 10%);
     --popover: hsl(0, 0%, 100%);
@@ -202,6 +219,13 @@
 .dark {
     --background: hsl(174, 22%, 6%);
     --foreground: hsl(165, 14%, 92%);
+
+    /*
+      Dark mode already read as a dim canvas under lighter cards, so the page
+      keeps the value the canvas has always had: the ink-green floor, with the
+      card at 9% above it. Same 1.08:1 step as light mode, inverted.
+    */
+    --page: hsl(174, 22%, 6%);
     --card: hsl(172, 20%, 9%);
     --card-foreground: hsl(165, 14%, 92%);
     --popover: hsl(172, 20%, 11%);
@@ -286,7 +310,7 @@
     }
 
     body {
-        @apply bg-background text-foreground;
+        @apply bg-page text-foreground;
 
         font-size: 0.875rem;
         line-height: 1.5;

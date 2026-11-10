@@ -53,6 +53,12 @@ abstract class EmployeeRequest extends FormRequest
     {
         $rules = [
             'employee_no' => ['required', 'string', 'max:50'],
+
+            // The plantilla item, which not every employee holds. Not unique:
+            // an item is refilled when its holder leaves, and HR's sheets
+            // repeat one while a hand-over is being processed.
+            'item_no' => ['nullable', 'string', 'max:50'],
+
             'last_name' => ['required', 'string', 'max:100'],
             'first_name' => ['required', 'string', 'max:100'],
             'middle_name' => ['nullable', 'string', 'max:100'],
@@ -63,7 +69,10 @@ abstract class EmployeeRequest extends FormRequest
             // Nullable because job order personnel do not have one.
             'salary_grade' => ['nullable', 'integer', 'min:1', 'max:33'],
 
-            'office_id' => ['required', 'integer'],
+            // Optional, because HR's plantilla sheet names no office and the
+            // import that reads it cannot invent one. An employee with no
+            // office yet is an incomplete record HR completes here.
+            'office_id' => ['nullable', 'integer'],
         ];
 
         if ($canSetSalary) {
@@ -92,7 +101,6 @@ abstract class EmployeeRequest extends FormRequest
     {
         return [
             'employee_no.unique' => 'Another employee already has this employee number.',
-            'office_id.required' => 'Please choose the office this employee reports to.',
             'office_id.exists' => 'That office no longer exists. Please choose another one.',
             'salary_grade.max' => 'Salary grades run from 1 to 33.',
             'salary_grade.min' => 'Salary grades run from 1 to 33.',
@@ -114,6 +122,7 @@ abstract class EmployeeRequest extends FormRequest
     {
         return [
             'employee_no' => 'employee number',
+            'item_no' => 'item number',
             'last_name' => 'last name',
             'first_name' => 'first name',
             'middle_name' => 'middle name',
@@ -132,7 +141,7 @@ abstract class EmployeeRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        $trimmable = ['employee_no', 'last_name', 'first_name', 'middle_name', 'suffix', 'position_title', 'employment_status'];
+        $trimmable = ['employee_no', 'item_no', 'last_name', 'first_name', 'middle_name', 'suffix', 'position_title', 'employment_status'];
 
         $merge = [];
 
@@ -145,7 +154,8 @@ abstract class EmployeeRequest extends FormRequest
         }
 
         // An empty number input posts "", which is not an integer and not null.
-        foreach (['salary_grade', 'monthly_rate'] as $field) {
+        // The office select does the same for "Not assigned yet".
+        foreach (['salary_grade', 'monthly_rate', 'office_id'] as $field) {
             if ($this->input($field) === '') {
                 $merge[$field] = null;
             }

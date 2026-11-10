@@ -2,7 +2,8 @@ import { DataPagination } from '@/components/data-pagination';
 import { DeleteEmployeesDialog } from '@/components/delete-employees-dialog';
 import { EmployeeSelectionBar } from '@/components/employee-selection-bar';
 import { EmptyState } from '@/components/empty-state';
-import { ImportEmployeeCsvDialog } from '@/components/import-employee-csv-dialog';
+import { EraseEmployeesDialog } from '@/components/erase-employees-dialog';
+import { ImportEmployeesDialog } from '@/components/import-employees-dialog';
 import { LetterTabs } from '@/components/letter-tabs';
 import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type EmployeeRecord, type OfficeOption, type Paginated, type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { FileSpreadsheet, Pencil, Search, UserPlus, UsersRound, X } from 'lucide-react';
+import { FileSpreadsheet, Pencil, RotateCcw, Search, Trash2, UserPlus, UsersRound, X } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -48,8 +49,14 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
 
     const canSeeSalary = auth.user?.can.viewSalary ?? false;
     // Deleting a record is the same privilege as taking someone off the list,
-    // so HR Staff never see a tick-box at all.
+    // so HR Staff never see a tick-box at all. Reading the deleted records and
+    // restoring from them is the same privilege again; erasing one for good is
+    // deliberately not — it is its own permission, and an HR Admin without it
+    // gets the list and the Restore button and no tick-boxes.
     const canDelete = auth.user?.can.deactivateEmployees ?? false;
+    const canErase = auth.user?.can.eraseEmployees ?? false;
+    const showingDeleted = filters.status === 'deleted';
+    const canTick = showingDeleted ? canErase : canDelete;
     const hasFilters = filters.search !== '' || filters.letter !== '' || filters.office !== '' || filters.status !== '';
 
     const pageIds = employees.data.map((employee) => employee.id);
@@ -115,6 +122,10 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
         router.get(route('employees.index'), {}, { preserveState: true, preserveScroll: true, replace: true });
     };
 
+    // No confirmation in front of restoring: it puts a record back the way it
+    // was, and the way to undo it is the delete button HR already knows.
+    const restore = (employee: EmployeeRecord) => router.patch(route('employees.restore', employee.id), {}, { preserveScroll: true });
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Employees" />
@@ -127,7 +138,7 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                     <>
                         <Button type="button" variant="outline" onClick={() => setImporting(true)} className="cursor-pointer">
                             <FileSpreadsheet aria-hidden="true" />
-                            Import CSV
+                            Import from Excel
                         </Button>
                         <Button asChild>
                             <Link href={route('employees.create')}>
@@ -139,11 +150,7 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                 }
             />
 
-            <ImportEmployeeCsvDialog
-                open={importing}
-                onOpenChange={setImporting}
-                adminColumns={[...(auth.user?.can.setEmploymentStatus ? ['Employment Status'] : []), ...(canSeeSalary ? ['Monthly Rate'] : [])]}
-            />
+            <ImportEmployeesDialog open={importing} onOpenChange={setImporting} canSeeSalary={canSeeSalary} />
 
             {/*
               overflow-clip, not overflow-hidden: both clip the table to the
@@ -211,6 +218,7 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                                 <SelectItem value="active">On the list</SelectItem>
                                 <SelectItem value="inactive">Deactivated</SelectItem>
                                 <SelectItem value={ALL}>Everyone</SelectItem>
+                                {canDelete && <SelectItem value="deleted">Deleted records</SelectItem>}
                             </SelectContent>
                         </Select>
                     </div>
@@ -227,8 +235,31 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                     <LetterTabs available={letters} value={filters.letter} onChange={(letter) => applyFilters({ letter })} />
                 </div>
 
+                {showingDeleted && (
+                    <div className="border-b px-4 py-3">
+                        <p className="text-muted-foreground text-sm">
+                            Records deleted from the masterlist. They are off every list and out of leave encoding, but nothing has been lost:{' '}
+                            <strong className="text-foreground">Restore</strong> puts one back exactly as it was.
+                            {canErase
+                                ? ' Erasing a record destroys it for good, so use it only for a row that should never have existed — a duplicate, a test row, a line imported twice.'
+                                : ' Erasing one for good needs a permission your account does not have.'}
+                        </p>
+                    </div>
+                )}
+
                 {employees.data.length === 0 ? (
-                    hasFilters ? (
+                    showingDeleted ? (
+                        <EmptyState
+                            icon={Trash2}
+                            title="Nothing in the deleted records"
+                            description="Records an HR Admin deletes from the masterlist wait here until they are restored or erased. Nothing matching these filters has been deleted."
+                            action={
+                                <Button type="button" variant="outline" onClick={clearFilters} className="cursor-pointer">
+                                    Back to the masterlist
+                                </Button>
+                            }
+                        />
+                    ) : hasFilters ? (
                         <EmptyState
                             icon={Search}
                             title="Nobody matches this search"
@@ -243,12 +274,12 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                         <EmptyState
                             icon={UsersRound}
                             title="The masterlist is empty"
-                            description="Add the employees this office keeps leave records for, one at a time or the whole masterlist from a CSV file. You can encode leave for them once they are on the list."
+                            description="Add the employees this office keeps leave records for, one at a time or the whole masterlist from a filled-in Excel template. You can encode leave for them once they are on the list."
                             action={
                                 <div className="flex flex-wrap justify-center gap-2">
                                     <Button type="button" variant="outline" onClick={() => setImporting(true)} className="cursor-pointer">
                                         <FileSpreadsheet aria-hidden="true" />
-                                        Import CSV
+                                        Import from Excel
                                     </Button>
                                     <Button asChild>
                                         <Link href={route('employees.create')}>
@@ -264,7 +295,7 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                {canDelete && (
+                                {canTick && (
                                     <TableHead className="w-10 pr-0">
                                         <Checkbox
                                             checked={selectAllState}
@@ -297,7 +328,7 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                                     data-state={selectedIds.includes(employee.id) ? 'selected' : undefined}
                                     className="hover:bg-accent/40 data-[state=selected]:bg-primary/5 border-b transition-colors last:border-0"
                                 >
-                                    {canDelete && (
+                                    {canTick && (
                                         <TableCell className="py-2 pr-0">
                                             <Checkbox
                                                 checked={selectedIds.includes(employee.id)}
@@ -318,10 +349,16 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                                         <div className="max-w-[52vw] min-w-0 md:max-w-none">
                                             <div className="flex items-center gap-2">
                                                 <span className="truncate font-medium">{employee.listName}</span>
-                                                {!employee.isActive && (
-                                                    <Badge variant="muted" className="shrink-0">
-                                                        Deactivated
+                                                {showingDeleted ? (
+                                                    <Badge variant="danger" className="shrink-0">
+                                                        Deleted {formatDeletedOn(employee.deletedAt)}
                                                     </Badge>
+                                                ) : (
+                                                    !employee.isActive && (
+                                                        <Badge variant="muted" className="shrink-0">
+                                                            Deactivated
+                                                        </Badge>
+                                                    )
                                                 )}
                                             </div>
                                             <p className="text-muted-foreground truncate text-xs" data-numeric>
@@ -357,13 +394,35 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                                         </TableCell>
                                     )}
                                     <TableCell className="text-right">
-                                        {/* Deactivating lives on the edit page, so editing is the only row action left. */}
-                                        <Button variant="ghost" size="icon" className="size-9 cursor-pointer" asChild>
-                                            <Link href={route('employees.edit', employee.id)} title={`Edit ${employee.listName}`}>
-                                                <Pencil aria-hidden="true" />
-                                                <span className="sr-only">Edit {employee.listName}</span>
-                                            </Link>
-                                        </Button>
+                                        {/*
+                                          Deactivating lives on the edit page, so
+                                          editing is the only row action on the
+                                          masterlist. A deleted record has no edit
+                                          page to go to — putting it back is the
+                                          only thing to do with one, and erasing
+                                          it is in the selection bar, where it
+                                          cannot be hit by a mis-click.
+                                        */}
+                                        {showingDeleted ? (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => restore(employee)}
+                                                className="cursor-pointer"
+                                            >
+                                                <RotateCcw aria-hidden="true" />
+                                                Restore
+                                                <span className="sr-only"> {employee.listName}</span>
+                                            </Button>
+                                        ) : (
+                                            <Button variant="ghost" size="icon" className="size-9 cursor-pointer" asChild>
+                                                <Link href={route('employees.edit', employee.id)} title={`Edit ${employee.listName}`}>
+                                                    <Pencil aria-hidden="true" />
+                                                    <span className="sr-only">Edit {employee.listName}</span>
+                                                </Link>
+                                            </Button>
+                                        )}
                                     </TableCell>
                                 </motion.tr>
                             ))}
@@ -371,10 +430,11 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                     </Table>
                 )}
 
-                {canDelete && (
+                {canTick && (
                     <EmployeeSelectionBar
                         selectedCount={selectedEmployees.length}
                         keptCount={keptCount}
+                        mode={showingDeleted ? 'erase' : 'delete'}
                         onClear={() => setSelectedIds([])}
                         onDelete={() => setConfirmingDelete(true)}
                     />
@@ -383,16 +443,38 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                 <DataPagination meta={employees.meta} links={employees.links} label="employees" />
             </section>
 
-            {canDelete && (
-                <DeleteEmployeesDialog
-                    open={confirmingDelete}
-                    onOpenChange={setConfirmingDelete}
-                    selected={selectedEmployees}
-                    onDeleted={() => setSelectedIds([])}
-                />
-            )}
+            {canTick &&
+                (showingDeleted ? (
+                    <EraseEmployeesDialog
+                        open={confirmingDelete}
+                        onOpenChange={setConfirmingDelete}
+                        selected={selectedEmployees}
+                        onErased={() => setSelectedIds([])}
+                    />
+                ) : (
+                    <DeleteEmployeesDialog
+                        open={confirmingDelete}
+                        onOpenChange={setConfirmingDelete}
+                        selected={selectedEmployees}
+                        onDeleted={() => setSelectedIds([])}
+                    />
+                ))}
         </AppLayout>
     );
+}
+
+/**
+ * When the row was deleted, short enough to sit inside a badge. Dates only —
+ * what HR wants from this is how stale the record is, not the minute.
+ */
+function formatDeletedOn(deletedAt: string | null): string {
+    if (!deletedAt) {
+        return '';
+    }
+
+    const date = new Date(deletedAt);
+
+    return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('en-PH', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 /**

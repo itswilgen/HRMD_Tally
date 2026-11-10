@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Exports\EmployeeMasterlistTemplate;
 use App\Http\Requests\Employees\ImportEmployeesRequest;
 use App\Models\Employee;
 use App\Models\User;
@@ -11,27 +12,33 @@ use App\Services\EmployeeImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Maatwebsite\Excel\Excel as ExcelFormat;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * Adding the masterlist from a CSV file: download the template, preview the
+ * Adding the masterlist from a file: download the template, preview the
  * filled-in file, then save it. The work is EmployeeImportService's.
  */
 class EmployeeImportController extends Controller
 {
     public function __construct(private readonly EmployeeImportService $imports) {}
 
-    public function template(Request $request): StreamedResponse
+    /**
+     * The blank workbook to fill in, laid out as HR's own plantilla sheet is.
+     * An .xlsx rather than a CSV because HR fills it in in Excel either way,
+     * and a workbook carries the headings and the column widths that make the
+     * sheet readable, where a CSV would hand over a wall of commas.
+     */
+    public function template(Request $request): BinaryFileResponse
     {
         $this->authorize('create', Employee::class);
 
-        $headings = $this->imports->templateHeadings($this->user($request));
-
-        return response()->streamDownload(function () use ($headings): void {
-            // The byte-order mark is what makes Excel open the file as UTF-8,
-            // so a name typed with ñ survives the round trip.
-            echo "\xEF\xBB\xBF".implode(',', $headings)."\r\n";
-        }, 'employee-masterlist-template.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+        return Excel::download(
+            new EmployeeMasterlistTemplate($this->imports->templateHeadings($this->user($request))),
+            'employee-masterlist-template.xlsx',
+            ExcelFormat::XLSX,
+        );
     }
 
     /**

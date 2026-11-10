@@ -440,6 +440,19 @@ it('trims a name typed with stray spaces', function (): void {
     expect(Employee::query()->sole()->last_name)->toBe('Dela Cruz');
 });
 
+it('saves an employee who has no office yet', function (): void {
+    $admin = hrAdmin();
+    $office = Office::factory()->create();
+
+    // Which is how every imported employee arrives: HR's plantilla sheet names
+    // no office, so the record is completed here rather than guessed at import.
+    $this->actingAs($admin)
+        ->post(route('employees.store'), employeePayload($office, ['office_id' => '']))
+        ->assertSessionHasNoErrors();
+
+    expect(Employee::query()->sole()->office_id)->toBeNull();
+});
+
 it('refuses an employee record that is missing or out of range', function (array $payload, string $field): void {
     $admin = hrAdmin();
     $office = Office::factory()->create();
@@ -455,7 +468,6 @@ it('refuses an employee record that is missing or out of range', function (array
     'no last name' => [['last_name' => ''], 'last_name'],
     'no first name' => [['first_name' => ''], 'first_name'],
     'no position' => [['position_title' => ''], 'position_title'],
-    'no office' => [['office_id' => ''], 'office_id'],
     'an office that does not exist' => [['office_id' => 9999], 'office_id'],
     'salary grade zero' => [['salary_grade' => 0], 'salary_grade'],
     'salary grade above 33' => [['salary_grade' => 34], 'salary_grade'],

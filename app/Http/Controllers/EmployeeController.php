@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Employees\DeleteEmployeesRequest;
+use App\Http\Requests\Employees\EraseEmployeesRequest;
 use App\Http\Requests\Employees\StoreEmployeeRequest;
 use App\Http\Requests\Employees\UpdateEmployeeRequest;
 use App\Http\Resources\EmployeeResource;
@@ -44,7 +45,20 @@ class EmployeeController extends Controller
         // the honest answer to that is to ignore it rather than to error.
         $letter = preg_match('/^[A-Z]$/', $letter) === 1 ? $letter : '';
 
+        // The deleted records are the same list read out of the bin: same
+        // search, same letter tabs, same office filter, so HR finds a mistaken
+        // row again the way it finds any other. A 403 rather than a silently
+        // ignored filter, unlike the letter above: this one is a privilege, and
+        // quietly showing HR Staff the live list instead would tell them the
+        // deleted records do not exist.
+        $showingDeleted = $status === 'deleted';
+
+        if ($showingDeleted) {
+            $this->authorize('viewTrashed', Employee::class);
+        }
+
         $employees = Employee::query()
+            ->when($showingDeleted, fn ($query) => $query->onlyTrashed())
             // The list prints the office name on every row.
             ->with('office:id,name')
             // One subquery for the page: the row explains that an employee with
@@ -55,7 +69,12 @@ class EmployeeController extends Controller
             ->when($officeId > 0, fn ($query) => $query->where('office_id', $officeId))
             // Default to the people currently being encoded for. Someone who has
             // left is still in the system, behind the "Deactivated" filter.
-            ->when($status !== 'all', fn ($query) => $query->where('is_active', $status !== 'inactive'))
+            // Active or not is not what the deleted list is sorted by, so it
+            // asks nothing about it.
+            ->when(
+                ! $showingDeleted && $status !== 'all',
+                fn ($query) => $query->where('is_active', $status !== 'inactive'),
+            )
             ->orderedByName()
             ->paginate(self::PER_PAGE)
             ->withQueryString();
@@ -63,7 +82,7 @@ class EmployeeController extends Controller
         return Inertia::render('employees/index', [
             'employees' => EmployeeResource::collection($employees),
             'offices' => $this->officeOptions(),
-            'letters' => $this->lettersInUse(),
+            'letters' => $this->lettersInUse($showingDeleted),
             'filters' => [
                 'search' => $search,
                 'letter' => $letter,
@@ -188,6 +207,59 @@ class EmployeeController extends Controller
     }
 
     /**
+     * Putting a deleted record back, from the deleted records list.
+     */
+    public function restore(Request $request, Employee $employee): RedirectResponse
+    {
+        $this->authorize('restore', $employee);
+
+        $this->employees->restore($employee, $this->user($request));
+
+        return back()->with(
+            'success',
+            sprintf(
+                '%s is back on the masterlist%s.',
+                $employee->full_name,
+                $employee->is_active ? '' : ', still deactivated',
+            ),
+        );
+    }
+
+    /**
+     * The ticked rows on the deleted records list, erased for good. Erases what
+     * it can and reports what it kept; the rule is EmployeeService::eraseMany's.
+     */
+    public function eraseMany(EraseEmployeesRequest $request): RedirectResponse
+    {
+        $result = $this->employees->eraseMany($request->ids(), $this->user($request));
+
+        $erased = count($result['erased']);
+        $kept = count($result['kept']);
+
+        $response = back();
+
+        if ($erased > 0) {
+            $response->with('success', sprintf(
+                '%d %s erased permanently. Only the activity log entry is left.',
+                $erased,
+                $erased === 1 ? 'record was' : 'records were',
+            ));
+        }
+
+        if ($kept > 0) {
+            $response->with('error', sprintf(
+                '%d of the ticked %s leave on file and %s kept: %s. A record with leave days behind it cannot be erased, because the tally sheets it is printed on must keep reading correctly.',
+                $kept,
+                $kept === 1 ? 'records has' : 'records have',
+                $kept === 1 ? 'was' : 'were',
+                $this->nameList($result['kept']),
+            ));
+        }
+
+        return $response;
+    }
+
+    /**
      * Names for a toast: enough to recognise who, without a sentence that
      * scrolls off the screen when someone ticks the whole page.
      *
@@ -245,14 +317,17 @@ class EmployeeController extends Controller
      * Which initial letters actually have employees behind them, so the A-Z tabs
      * can grey out the rest instead of offering an empty list.
      *
-     * One grouped query against employees_last_name_prefix_index.
+     * One grouped query against employees_last_name_prefix_index. It counts the
+     * same rows the table below is showing: on the deleted records the live
+     * masterlist's letters would offer two dozen tabs leading to nothing.
      *
      * @return list<string>
      */
-    private function lettersInUse(): array
+    private function lettersInUse(bool $trashed = false): array
     {
         return array_values(array_filter(
             Employee::query()
+                ->when($trashed, fn ($query) => $query->onlyTrashed())
                 ->selectRaw('distinct upper(substr(last_name, 1, 1)) as letter')
                 ->orderBy('letter')
                 ->pluck('letter')
