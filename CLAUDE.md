@@ -4,7 +4,7 @@ Read `docs/PROJECT_CONTEXT.md` before any work. It is the source of truth for th
 
 ## Key rules (summary — details in the doc)
 
-- **Phase 1 scope only:** employees, leave encoding, yearly tally, PDF/Excel export, activity log. No leave credit computation yet.
+- **Phase 1 scope:** employees, leave encoding, yearly tally, PDF/Excel export, activity log, and **recorded** leave credits (the yearly figure HR types, against days taken). Credit **computation** (monthly earning, COC caps, the CSC leave card) is not built yet.
 - **Stack:** Laravel 12 + PostgreSQL backend; React + TypeScript (strict) + Tailwind via Inertia (Laravel React starter kit, shadcn/ui).
 - **Architecture:** thin controllers, Form Requests for validation, Policies for authorization, Services for business logic, Resources/DTOs for data sent to React, PHP Enums for fixed values.
 - **Tally text and totals** are built only in `LeaveTallyService`, so the page, PDF and Excel always match.

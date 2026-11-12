@@ -36,6 +36,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  * @property-read int|null $leave_records_count set by withCount(), absent otherwise
+ * @property-read int|null $leave_credits_count set by withCount(), absent otherwise
  * @property-read string|null $middle_initial
  * @property-read string $list_name
  * @property-read string $full_name
@@ -89,6 +90,16 @@ class Employee extends Model
     public function leaveRecords(): HasMany
     {
         return $this->hasMany(LeaveRecord::class);
+    }
+
+    /**
+     * The yearly credit figures an HR Admin has typed for this employee.
+     *
+     * @return HasMany<LeaveCredit, $this>
+     */
+    public function leaveCredits(): HasMany
+    {
+        return $this->hasMany(LeaveCredit::class);
     }
 
     /**

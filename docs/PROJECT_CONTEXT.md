@@ -59,6 +59,8 @@ The system has two roles in Phase 1. Employees do not log in.
 | --- | --- | --- |
 | View yearly tally | Yes | Yes |
 | Add, edit, delete leave records | Yes | Yes |
+| View leave credits and remaining balances | Yes | Yes |
+| Set leave credits (grid, per employee, grant to all, copy a year, import) | Yes | No |
 | Add and edit employees | Yes | Yes |
 | Deactivate employees | Yes | No |
 | Delete an employee record created by mistake | Yes | No |
@@ -75,13 +77,14 @@ Notes on the two admin-only employee fields:
 
 - **Salary rate** is omitted from the payload entirely for HR Staff, not sent as `null`, and the validation rule is not registered for them either — a forged POST is a no-op rather than a 403.
 - **Employment status** is free text an HR Admin types from the appointment paper (`employees.set_employment_status`), blank until they do. There is no fixed list of statuses; values already in use are offered as suggestions. HR Staff read it.
+- **Leave credits** follow the office list's pattern: both roles read them, only an HR Admin types them. An encoder who can see that someone has 2.5 days of VL left is best placed to notice a leave form that cannot be right, and the figure is an entitlement, not personal information the way a salary rate is.
 - **The office list** is readable by both roles because the tally sheet is filtered by office; only an HR Admin may add, rename or remove one.
 
 Users are office staff, not technical users, so every screen must be simple, forgiving and fast for repeated encoding.
 
 ## 4. Scope of work
 
-Phase 1 covers recording leave and producing the yearly tally sheet; leave credit computation is deliberately excluded and planned for a later phase.
+Phase 1 covers recording leave and producing the yearly tally sheet, plus **recorded leave credits**: the yearly figure an HR Admin types from the leave card, shown against the days taken. **Computing** credits (monthly earning, the COC caps, the CSC leave card) is still excluded and planned for a later phase.
 
 ### In scope (Phase 1)
 
@@ -94,11 +97,12 @@ Phase 1 covers recording leave and producing the yearly tally sheet; leave credi
 7. **Print and export:** landscape PDF in the paper sheet's layout, Excel export.
 8. **Activity log:** who created, changed or deleted which record and when.
 9. **Data migration support:** importing the employee masterlist (Excel/CSV).
-10. **Documentation:** README, short user manual, backup and install guide.
+10. **Leave credits (recorded, not computed):** a yearly figure per employee and leave type, typed by an HR Admin in a grid or per employee, granted to everyone at once, copied from another year, or imported from Excel; shown as credits − taken = left, where "taken" comes from `LeaveTallyService`. See section 6.1.
+11. **Documentation:** README, short user manual, backup and install guide.
 
 ### Out of scope (future phases)
 
-- Leave credit earning, balances and the CSC leave card.
+- Leave credit **earning** (monthly accrual), the COC caps, and the CSC leave card. Recorded credits and balances are in scope (item 10 above).
 - Tardiness and undertime deductions.
 - Online leave application and approval by employees (CS Form No. 6).
 - Employee self-service login.
@@ -229,9 +233,22 @@ What this means for Phase 1: a 4-hour CTO block is a half day (AM or PM) and an 
 
 The figures above came from secondary sources (assistance.ph, TeacherPH). Before the credits module is built they must be checked against CSC MC No. 2, s. 2004 and whatever the city's own HR issuance says, since an office can be stricter than the national rule.
 
+### 6.1 Leave credits (recorded, not computed)
+
+The credits screens record what the leave card says and put it next to what the tally counts. Nothing here earns, accrues or caps a credit — that is the later computation phase above.
+
+14. **One figure per employee, leave type and year**, in half days (steps of 0.5, 0 to 999). Blank and 0 are different answers: blank means "no figure yet", 0 means HR decided nought. Clearing a cell removes the figure.
+15. **Taken comes from the tally.** The "taken" half of credits − taken = left is `LeaveTallyService::totalsForEmployees()`, so a balance and the tally sheet can never disagree (rule 6).
+16. **A balance may go negative.** HR encodes approved leave; more taken than granted is shown as overdrawn, never refused. Credits never gate encoding.
+17. **Retired leave types** keep their figures and accept corrections, but take no new figure (rule 8's shape).
+18. **Who is on a year** is the tally's rule (rule 7), plus anyone with a credit on file for that year, so a figure typed for someone since resigned stays visible.
+19. **Grant to all and copy a year fill blanks only**, unless the HR Admin ticks "overwrite". A blank in the grant dialog grants nothing; it is not a grant of 0.
+20. **Import from Excel** reads the downloaded sheet for one year, matches rows by employee number, and saves all rows or none. A blank cell in the file leaves that figure as it is — clearing is done on screen, where it can be seen.
+21. **Every change is in the activity log** with the old and new figure by leave code; a save that changes nothing logs nothing.
+
 ## 7. Data model (PostgreSQL)
 
-Five core tables hold the data; `leave_records` stores one row per leave day, which keeps counting simple and becomes the "leave taken" input for a future credits module.
+Six core tables hold the data; `leave_records` stores one row per leave day, which keeps counting simple and is the "leave taken" input for the credits screens.
 
 | Table | Key columns | Notes |
 | --- | --- | --- |
@@ -239,6 +256,7 @@ Five core tables hold the data; `leave_records` stores one row per leave day, wh
 | `employees` | id, employee_no (unique), item_no (nullable), last_name, first_name, middle_name, suffix, position_title, salary_grade, monthly_rate, office_id, employment_status (nullable), is_active, timestamps, deleted_at | Never hard-deleted. `employment_status` is free text an HR Admin types, blank until then. `item_no` is the plantilla item from HR's own sheet; it is not unique and is not an identifier, because an item is handed on to whoever fills the position next while `employee_no` stays with one person for as long as their leave history does |
 | `leave_types` | id, code (unique), name, color, is_active, sort_order | Managed by HR Admin |
 | `leave_records` | id, employee_id, leave_type_id, leave_date, day_part (WHOLE/AM/PM), remarks, encoded_by, timestamps, deleted_at | One row per leave day |
+| `leave_credits` | id, employee_id, leave_type_id, year, days (decimal 5,1), remarks, granted_by, timestamps | One figure per (employee, leave type, year), unique. No soft deletes: a credit is a figure, not an event — clearing it removes the row and the activity log keeps what it said. Blank (no row) and 0 are different answers |
 | `holidays` | id, date (unique), name, kind, recurs_yearly | Skipped in date ranges. `recurs_yearly` marks the seven fixed-date regular holidays, matched on month and day so they are entered once instead of every year; `kind` separates regular from special non-working |
 
 Supporting tables: `users`, roles and permissions (spatie/laravel-permission), `activity_log` (spatie/laravel-activitylog), `jobs` and `notifications` for background exports.
@@ -377,6 +395,7 @@ The work is built in eight phases, each reviewed before the next starts; target 
 | 5 | Leave encoding | Add/edit/delete leave, date ranges, half-days, conflict validation |
 | 6 | Yearly tally | Tally page matching the mockup, filters, letter tabs, employee history |
 | 7 | Print and export | Landscape PDF in paper-sheet layout, Excel export, background jobs |
+| 4b | Leave credits (recorded) | Credits grid and per-employee page, grant to all, copy a year, Excel import (built 2026-11-11 to 2026-11-12) |
 | 8 | Activity log and handover | Activity log page, README, user manual, backup guide, deployment on office LAN |
 
 **Phases 5 and 6 were built before Phase 4** (2026-10-31). The tally sheet is the screen the

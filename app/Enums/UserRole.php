@@ -40,6 +40,13 @@ enum UserRole: string
      * it on the employee record but cannot type into it, because it is copied
      * from an appointment paper only an HR Admin handles.
      *
+     * Leave credits follow the offices pattern rather than the salary one:
+     * everybody reads them, only an HR Admin types them. An encoder who can see
+     * that someone has 2.5 days of VL left is the person best placed to notice a
+     * leave form that cannot be right, so hiding the figure from HR Staff would
+     * cost accuracy and protect nothing — the figure is an entitlement, not
+     * personal information the way a salary rate is.
+     *
      * @return list<Permission>
      */
     public function permissions(): array
@@ -49,6 +56,7 @@ enum UserRole: string
             self::HrStaff => [
                 Permission::ViewTally,
                 Permission::ManageLeave,
+                Permission::ViewCredits,
                 Permission::ManageEmployees,
                 Permission::GenerateExports,
             ],

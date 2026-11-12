@@ -13,7 +13,17 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavGroup } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Building2, CalendarRange, Contact, LayoutDashboard, PanelLeftClose, PanelLeftOpen, SlidersHorizontal, UsersRound } from 'lucide-react';
+import {
+    Building2,
+    CalendarRange,
+    Contact,
+    LayoutDashboard,
+    PanelLeftClose,
+    PanelLeftOpen,
+    Scale,
+    SlidersHorizontal,
+    UsersRound,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 
 /*
@@ -32,6 +42,7 @@ const navGroups: NavGroup[] = [
             // The tally sheet first: it is the screen this system exists for,
             // and the masterlist behind it is visited far less often.
             { title: 'Leave tally', url: '/tally', icon: CalendarRange, permission: 'viewTally' },
+            { title: 'Leave credits', url: '/credits', icon: Scale, permission: 'viewCredits' },
             { title: 'Employees', url: '/employees', icon: Contact, permission: 'manageEmployees' },
         ],
     },

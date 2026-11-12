@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\DB;
  */
 class EmployeeService
 {
+    public function __construct(private readonly LeaveCreditService $credits) {}
+
     /**
      * @param  array<string, mixed>  $data
      */
@@ -215,14 +217,30 @@ class EmployeeService
                 // the row is gone this entry is the only record that this
                 // person was ever on the masterlist at all.
                 $erased[] = sprintf('%s (%s)', $employee->list_name, $employee->employee_no);
+            }
 
+            // Leave credits are restrictOnDelete like leave records, but unlike
+            // leave records they are not a reason to refuse: the check above has
+            // already established that nobody in this selection has a day of
+            // leave on file, so their credit figures are a grant nobody ever
+            // drew on. They go with the record, and the count goes in the log so
+            // the entry says what was destroyed rather than only who.
+            $forgotten = $this->credits->forgetEmployees(
+                array_map(static fn (Employee $employee): int => $employee->id, $erasable),
+            );
+
+            foreach ($erasable as $employee) {
                 $employee->forceDelete();
             }
 
             activity('employee')
                 ->causedBy($user)
                 ->event('force_deleted')
-                ->withProperties(['count' => count($erased), 'employees' => $erased])
+                ->withProperties([
+                    'count' => count($erased),
+                    'employees' => $erased,
+                    'leave_credits' => $forgotten,
+                ])
                 ->log(sprintf(
                     'Permanently erased %d employee %s',
                     count($erased),

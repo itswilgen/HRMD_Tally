@@ -15,6 +15,8 @@ enum Permission: string
 {
     case ViewTally = 'tally.view';
     case ManageLeave = 'leave.manage';
+    case ViewCredits = 'credits.view';
+    case ManageCredits = 'credits.manage';
     case ManageEmployees = 'employees.manage';
     case DeactivateEmployees = 'employees.deactivate';
     case EraseEmployees = 'employees.erase';
@@ -33,6 +35,8 @@ enum Permission: string
         return match ($this) {
             self::ViewTally => 'View yearly tally',
             self::ManageLeave => 'Add, edit and delete leave records',
+            self::ViewCredits => 'View leave credits and remaining balances',
+            self::ManageCredits => 'Add and edit leave credits',
             self::ManageEmployees => 'Add and edit employees',
             self::DeactivateEmployees => 'Deactivate employees',
             self::EraseEmployees => 'Erase a deleted employee record permanently',
@@ -54,6 +58,8 @@ enum Permission: string
         return match ($this) {
             self::ViewTally => 'viewTally',
             self::ManageLeave => 'manageLeave',
+            self::ViewCredits => 'viewCredits',
+            self::ManageCredits => 'manageCredits',
             self::ManageEmployees => 'manageEmployees',
             self::DeactivateEmployees => 'deactivateEmployees',
             self::EraseEmployees => 'eraseEmployees',

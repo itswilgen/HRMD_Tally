@@ -7,6 +7,8 @@ import { LucideIcon } from 'lucide-react';
 export type PermissionKey =
     | 'viewTally'
     | 'manageLeave'
+    | 'viewCredits'
+    | 'manageCredits'
     | 'manageEmployees'
     | 'deactivateEmployees'
     | 'eraseEmployees'
@@ -153,6 +155,41 @@ export interface TallyRow {
     totalsText: Record<string, string>;
     grandTotal: number;
     grandTotalText: string;
+}
+
+/** A credits column: every leave type, with whether it still takes new figures. */
+export interface CreditColumn extends LeaveTypeColumn {
+    /** False once HR has retired the type: its figures may be corrected, not added. */
+    isActive: boolean;
+}
+
+/**
+ * App\Services\LeaveCreditService — one leave type's figure for one employee
+ * and year. `credits` null means "no figure yet", which is not the same as 0.
+ */
+export interface CreditCell {
+    credits: number | null;
+    creditsText: string;
+    /** Days taken, from LeaveTallyService, so it always matches the tally. */
+    used: number;
+    usedText: string;
+    /** Null when there is no figure to subtract from. */
+    remaining: number | null;
+    remainingText: string;
+    isOverdrawn: boolean;
+}
+
+export interface CreditRow {
+    /** Keyed by leave type id. */
+    cells: Record<string, CreditCell>;
+    creditsTotal: number;
+    creditsTotalText: string;
+    usedTotal: number;
+    usedTotalText: string;
+    remainingTotal: number;
+    remainingTotalText: string;
+    hasCredits: boolean;
+    isOverdrawn: boolean;
 }
 
 /** App\Services\LeaveEncodingService::preview() — what a range would save. */

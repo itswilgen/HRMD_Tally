@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use App\Exports\EmployeeMasterlistTemplate;
-use App\Imports\EmployeeMasterlist;
 use App\Models\Employee;
 use App\Models\Office;
 use App\Models\User;
+use App\Services\EmployeeImportService;
 use Illuminate\Http\UploadedFile;
 use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Facades\Excel;
@@ -359,7 +359,7 @@ it('refuses a workbook too long to read all of, rather than importing part of it
     // One row past what the reader parses. Each row holds a space, so it is a
     // row in the file that counts as no employee once trimmed: the length of
     // the file, not the number of people in it, is what makes this unreadable.
-    for ($row = 0; $row < EmployeeMasterlist::ROWS; $row++) {
+    for ($row = 0; $row < EmployeeImportService::MAX_ROWS + 2; $row++) {
         $rows[] = [' ', null, null, null, null, null, null];
     }
 
