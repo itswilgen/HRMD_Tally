@@ -5,40 +5,53 @@ described below. Use React + TypeScript + Tailwind + shadcn/ui. Put all colors i
 Tailwind theme as named tokens (no hardcoded hex values inside components).
 
 ## Overall feel
-Clean, professional government office tool. Flat design: no gradients, no heavy shadows,
-no emoji. Calm neutral background, one green accent, and color used ONLY to tell leave
-types apart. Dense but readable tables, made for HR staff who encode all day.
+Clean, professional government office tool, read like a well-made official form
+(redesign of 2026-11-12). Swiss/minimal: flat surfaces, hairline borders as the main
+separator, no gradients, no glow, no emoji, no decorative icon tiles. One colour family —
+the office blue — carries the sidebar and every action; colour is otherwise used only
+for state (saved, warning, error) and to tell leave types apart. Dense but readable
+tables, made for HR staff who encode all day. Every figure on a screen is real data.
+
+**Signature detail (the only ornament):** page titles are set in Poppins and sit
+on a hairline "form rule" with a short blue stroke at its start (`form-rule` utility),
+like the ruled header of a CSC form. Do not reuse the rule elsewhere.
 
 ## Design tokens
 
-Fonts (Google Fonts):
-- `IBM Plex Sans` (400, 500, 600, 700) for all UI text
-- `IBM Plex Mono` (500, 600) for numbers, days, and leave codes
+All tokens live in `resources/css/app.css` (light in `:root`, dark in `.dark`).
+Components use token classes only — never a raw hex or a Tailwind palette colour.
 
-Colors:
-| Token | Hex | Used for |
-|---|---|---|
-| bg-page | #F4F5F2 | page background |
-| surface | #FFFFFF | cards, table, inputs |
-| sidebar | #005B99 (light) / #1F3B33 (dark) | sidebar background |
-| sidebar-hover | #06456F (light) / #2A4A41 (dark) | sidebar link hover |
-| sidebar-divider | #1F74AD (light) / #355A4F (dark) | sidebar footer border |
-| sidebar-text | #C9D6D0 | sidebar links |
-| sidebar-label | #A9BDB4 | small "HRMD" label |
-| primary | #1F5F4A | primary buttons, current month header, links |
-| primary-hover | #174B3A | primary button hover |
-| text | #1B1F24 | main text |
-| text-secondary | #3A424B | labels, table headers |
-| text-muted | #5B6470 | breadcrumbs, helper text, row numbers |
-| border | #C8CDC6 | inputs, buttons, card borders |
-| table-head | #E9ECE6 | table header cells |
-| table-group-head | #DFE3DC | grouped header ("MONTH…", "TOTAL…") |
-| row-border | #E3E6E0 | row dividers |
-| row-zebra | #FAFBF8 | even rows |
-| row-hover | #F1F5F2 | row hover |
-| month-current | #F2F8F5 | current month cells |
-| month-future | #F6F6F3 | future month cells |
-| total-grand | #EEF2EC | grand total column |
+Fonts (Bunny Fonts, two families):
+- `Source Sans 3` (400, 500, 600, 700) for all UI text, tables and figures.
+  Numbers use tabular figures (`[data-numeric]`, tables, `.font-mono`); there is no
+  separate monospace face.
+- `Poppins` (600, 700) via `font-display` for page titles (`PageHeader`), the auth title and the
+  product name in the sidebar only.
+- Scale: 11 (`text-2xs`) / 12 / 13 / 14 (body) / 16 / 20 / 24–28 (page title, Poppins 600, -0.02em).
+
+Colors (light / dark):
+| Token | Light | Dark | Used for |
+|---|---|---|---|
+| page | #F3F5F7 | #0B121C | page canvas |
+| card | #FFFFFF | #111A26 | cards, tables, inputs |
+| foreground | #0F1C2E | #E6EAF0 | main text (ink) |
+| muted-foreground | #556375 | #93A1B3 | labels, helper text |
+| border / input | #DDE2E8 / #CBD3DC | #223044 / #2C3C52 | hairlines, field borders |
+| primary | #005B99 | #5B9BD5 | buttons, links, focus ring, current month |
+| sidebar | #005B99 | #0A1A2B | sidebar background |
+| sidebar-accent | #1A6CA5 | #13283F | hover and active nav item |
+| success | #1F7A4D | #3FB27F | saved / active states only |
+| warning | #9A5B05 | #E3A33B | warnings, nearly-used credit |
+| destructive | #B42318 | #F06C5E | errors, overdrawn, delete |
+| table-head | #F1F4F7 | #142030 | table header cells |
+| row-zebra / row-hover | #FAFBFC / #EEF4FA | #0F1823 / #172536 | rows |
+| month-current | #EAF2F9 | #13243A | current month cells |
+
+Each state colour has a `-surface` tint for backgrounds (e.g. `bg-success-surface`).
+
+Radius: 6px buttons, inputs and badges (`rounded-md`), 8px cards and tables
+(`rounded-lg`), 12px dialogs, the auth sheet and floating bars (`rounded-xl`).
+Shadows only on floating layers (menus, dialogs, the unsaved-changes bar).
 
 Leave type chip colors (background / text), loaded from the `leave_types.color` field,
 with these as seeded defaults:
@@ -51,15 +64,33 @@ with these as seeded defaults:
 | CTO | Compensatory Time-Off | #E4E7EA | #2E343A |
 | WL | Wellness | #DDF0D9 | #24561E |
 
-Radius: 6px for buttons/inputs, 8px for cards, 4px for chips, full for filter pills.
+Chips keep a 4px radius.
+
+## Brand and landing page
+- **The mark is the official seal of the City of Tanjay**, served from
+  `public/images/brand/` (`tanjay-seal-96/192/256.png`, transparent) through the
+  `TanjaySeal` component, which picks the file for the size. It appears in the sidebar
+  on every page, on the landing page, and as the favicon / home-screen icon. Never
+  recolour, crop or redraw it, and never place it on a busy background other than the
+  landing gradient.
+- **Wordmark:** "HRMD" over "LGU TANJAY CITY", set in Poppins 700 in `landing-ink`. The
+  sidebar uses the small form: "HRMD · LGU Tanjay City" above "Leave Tally Sheet".
+- **Landing page (sign-in and password screens)** follows the HRMD banner: the
+  `landing-canvas` gradient (lavender `--landing-from` → `--landing-via` → light blue
+  `--landing-to`, deep indigo to navy in dark mode) with `NetworkBackground`, a canvas
+  of slowly drifting points joined by fine lines in `--landing-line`. Brand on the left,
+  the sign-in sheet on the right; stacked on phones. The animation stops when the tab
+  is hidden, is drawn still under "reduce motion", ignores the pointer, and is hidden
+  from screen readers. It is used on the landing page only — never inside the app.
 
 ## App layout
 Two columns: sidebar on the left, main content on the right. On small screens
 the sidebar stacks above the content (flex-wrap), never fixed or 100vh.
 
 ### Sidebar (width ~240px, background `sidebar`, padding 24px 16px)
-- Top: small uppercase label "HRMD" (12px, letter-spacing .08em, `sidebar-label`, 600),
-  under it "Leave Tally" (18px, 700, white).
+- Top: a flat white seal tile with the mark, then a small uppercase "HRMD" label and
+  "Leave Tally Sheet" in Poppins. No gradient, no badge.
+- The sidebar is collapsed from the top bar's toggle only (one control, not three).
 - Nav links with lucide icons (18px) + label, 14px, padding 10px 12px, radius 6px:
   Tally sheet, Employees, Leave types, Holidays, Reports, Activity log.
   - Default: `sidebar-text`; hover: `sidebar-hover` bg + white text.

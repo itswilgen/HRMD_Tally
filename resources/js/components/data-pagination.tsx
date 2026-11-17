@@ -42,7 +42,7 @@ export function DataPagination({ meta, links, label, note }: DataPaginationProps
     return (
         <nav
             aria-label={`${label} pagination`}
-            className="border-border/70 bg-muted/20 flex flex-col gap-3 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
+            className="bg-muted/20 flex flex-col gap-3 border-t px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
         >
             <div className="text-muted-foreground flex items-center gap-2 text-xs" data-numeric>
                 {total === 0 ? (

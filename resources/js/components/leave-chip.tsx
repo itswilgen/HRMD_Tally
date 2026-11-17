@@ -50,7 +50,7 @@ export function LeaveChip({ color, code, figures, name, onClick, title, label, c
     const isInteractive = onClick !== undefined;
     const shape = cn(
         'text-2xs inline-flex max-w-full items-center gap-1 rounded-md px-1.5 py-0.5 leading-tight shadow-[0_1px_2px_rgba(0,0,0,0.04)] ring-1 ring-current/15 ring-inset',
-        isInteractive && 'cursor-pointer transition-all hover:shadow-xs hover:brightness-95 active:scale-[0.97]',
+        isInteractive && 'cursor-pointer transition-all hover:brightness-95 active:scale-[0.97]',
         chipTokens(color),
         className,
     );

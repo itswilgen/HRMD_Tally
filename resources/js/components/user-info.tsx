@@ -15,11 +15,11 @@ export function UserInfo({ user, showEmail = false }: { user: AuthUser; showEmai
 
     return (
         <>
-            <Avatar className={cn('size-8 overflow-hidden rounded-lg ring-1 transition-all', inMenu ? 'ring-primary/20' : 'ring-sidebar-primary/20')}>
+            <Avatar className="size-8 overflow-hidden rounded-md">
                 <AvatarFallback
                     className={cn(
-                        'rounded-lg bg-gradient-to-br text-xs font-bold',
-                        inMenu ? 'from-primary/15 to-primary/5 text-primary' : 'from-sidebar-primary/25 to-sidebar-primary/10 text-sidebar-primary',
+                        'rounded-md text-xs font-semibold',
+                        inMenu ? 'bg-accent text-primary' : 'bg-sidebar-accent text-sidebar-accent-foreground',
                     )}
                 >
                     {user.initials}

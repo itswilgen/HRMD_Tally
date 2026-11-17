@@ -81,7 +81,7 @@ export function EmployeeForm({ employee, offices, employmentStatuses, can, submi
     };
 
     return (
-        <form onSubmit={submit} className="bg-card w-full rounded-xl border">
+        <form onSubmit={submit} className="bg-card w-full rounded-lg border">
             <Section
                 title="Name"
                 description="Typed the way it appears on the appointment paper. The tally sheet prints the surname first and only the middle initial."

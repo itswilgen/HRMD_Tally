@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\DayPart;
 use App\Models\LeaveRecord;
 use App\Models\LeaveType;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
@@ -108,6 +109,32 @@ class LeaveTallyService
         }
 
         return $totals;
+    }
+
+    /**
+     * Every leave day encoded between two dates, inclusive, counted the way
+     * the sheet counts them: a whole day is 1, AM or PM is 0.5.
+     *
+     * Lives here for the same reason totalsForEmployees() does — business
+     * rule 6 keeps every day total in this service — so the dashboard's
+     * "days this month" can never disagree with the sheet.
+     */
+    public function daysBetween(CarbonInterface $from, CarbonInterface $to): float
+    {
+        $rows = LeaveRecord::query()
+            ->whereBetween('leave_date', [$from->toDateString(), $to->toDateString()])
+            ->toBase()
+            ->selectRaw('day_part, count(*) as day_count')
+            ->groupBy('day_part')
+            ->get();
+
+        $days = 0.0;
+
+        foreach ($rows as $row) {
+            $days += DayPart::from((string) data_get($row, 'day_part'))->days() * (int) data_get($row, 'day_count');
+        }
+
+        return round($days, 1);
     }
 
     /**

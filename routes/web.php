@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeImportController;
 use App\Http\Controllers\LeaveCreditController;
@@ -10,7 +11,6 @@ use App\Http\Controllers\LeaveRecordController;
 use App\Http\Controllers\TallyController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 /*
  * There is no public landing page: this is an internal HRMD tool, so the root
@@ -24,9 +24,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     /*
      * The yearly tally sheet and the leave behind it. Both roles encode, so

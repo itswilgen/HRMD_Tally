@@ -9,21 +9,10 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
     SidebarRail,
-    useSidebar,
 } from '@/components/ui/sidebar';
 import { type NavGroup } from '@/types';
 import { Link } from '@inertiajs/react';
-import {
-    Building2,
-    CalendarRange,
-    Contact,
-    LayoutDashboard,
-    PanelLeftClose,
-    PanelLeftOpen,
-    Scale,
-    SlidersHorizontal,
-    UsersRound,
-} from 'lucide-react';
+import { Building2, CalendarRange, Contact, LayoutDashboard, Scale, SlidersHorizontal, UsersRound } from 'lucide-react';
 import AppLogo from './app-logo';
 
 /*
@@ -60,28 +49,18 @@ const navGroups: NavGroup[] = [
 ];
 
 export function AppSidebar() {
-    const { state, toggleSidebar } = useSidebar();
-    const isCollapsed = state === 'collapsed';
-
+    // The sidebar is collapsed and expanded from the top bar's toggle only:
+    // one control in one place, always visible, instead of three.
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
                 <SidebarMenu>
-                    <SidebarMenuItem className="flex items-center gap-1">
-                        <SidebarMenuButton size="lg" asChild className="flex-1">
+                    <SidebarMenuItem>
+                        <SidebarMenuButton size="lg" asChild tooltip="HRMD · Leave Tally Sheet">
                             <Link href="/dashboard" prefetch>
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>
-                        <button
-                            type="button"
-                            onClick={toggleSidebar}
-                            title={isCollapsed ? 'Expand sidebar' : 'Collapse to icon sidebar'}
-                            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse to icon sidebar'}
-                            className="text-sidebar-foreground/60 hover:bg-sidebar-accent flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors group-data-[collapsible=icon]:hidden hover:text-white"
-                        >
-                            <PanelLeftClose className="size-4" />
-                        </button>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
@@ -90,23 +69,7 @@ export function AppSidebar() {
                 <NavMain groups={navGroups} />
             </SidebarContent>
 
-            <SidebarFooter className="gap-1">
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton
-                            onClick={toggleSidebar}
-                            tooltip={isCollapsed ? 'Expand sidebar' : 'Switch to icon sidebar'}
-                            className="text-sidebar-foreground/85 hover:bg-sidebar-accent cursor-pointer transition-colors hover:text-white"
-                        >
-                            {isCollapsed ? (
-                                <PanelLeftOpen className="text-sidebar-primary size-4 shrink-0" />
-                            ) : (
-                                <PanelLeftClose className="size-4 shrink-0" />
-                            )}
-                            <span className="truncate font-medium">{isCollapsed ? 'Expand sidebar' : 'Collapse to icon'}</span>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
+            <SidebarFooter>
                 <NavUser />
             </SidebarFooter>
 

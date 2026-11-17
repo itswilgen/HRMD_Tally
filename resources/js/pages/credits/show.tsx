@@ -93,14 +93,14 @@ export default function CreditsShow({ employee, credits, leaveTypes, year, years
                 }
             />
 
-            <section className="border-border/80 bg-card overflow-hidden rounded-xl border shadow-xs">
+            <section className="bg-card overflow-hidden rounded-lg border">
                 <div className="flex flex-wrap items-end justify-between gap-4 border-b p-4">
                     <div className="grid gap-1.5">
                         <Label htmlFor="year" className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                             Year
                         </Label>
                         <Select value={String(year)} onValueChange={changeYear}>
-                            <SelectTrigger id="year" className="h-11 w-28 cursor-pointer rounded-lg font-medium" data-numeric>
+                            <SelectTrigger id="year" className="h-11 w-28 font-medium" data-numeric>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>

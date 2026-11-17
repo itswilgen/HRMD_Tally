@@ -26,7 +26,7 @@ import {
     type TallyRow,
 } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { CalendarDays, CalendarPlus, FileDown, FileSpreadsheet, Rows3, Search, Tag, UsersRound, X } from 'lucide-react';
+import { CalendarPlus, FileDown, FileSpreadsheet, Rows3, Search, UsersRound, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 interface TallyFilters {
@@ -209,63 +209,14 @@ export default function TallyIndex({
                 }
             />
 
-            {/* Summary Metrics & Context */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="border-border/70 bg-card flex items-center gap-3 rounded-xl border p-3.5 shadow-2xs transition-all hover:shadow-xs">
-                    <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
-                        <UsersRound className="size-5" aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-2xs text-muted-foreground font-semibold tracking-wider uppercase">Personnel</p>
-                        <p className="text-foreground text-lg font-bold tracking-tight" data-numeric>
-                            {employees.meta.total}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="border-border/70 bg-card flex items-center gap-3 rounded-xl border p-3.5 shadow-2xs transition-all hover:shadow-xs">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                        <CalendarDays className="size-5" aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-2xs text-muted-foreground font-semibold tracking-wider uppercase">Tally Period</p>
-                        <p className="text-foreground text-lg font-bold tracking-tight" data-numeric>
-                            {year}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="border-border/70 bg-card flex items-center gap-3 rounded-xl border p-3.5 shadow-2xs transition-all hover:shadow-xs">
-                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                        <Tag className="size-5" aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-2xs text-muted-foreground font-semibold tracking-wider uppercase">Leave Codes</p>
-                        <p className="text-foreground text-lg font-bold tracking-tight" data-numeric>
-                            {leaveTypes.length} Types
-                        </p>
-                    </div>
-                </div>
-
-                <div className="border-border/70 bg-card flex items-center gap-3 rounded-xl border p-3.5 shadow-2xs transition-all hover:shadow-xs">
-                    <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
-                        <Rows3 className="size-5" aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0">
-                        <p className="text-2xs text-muted-foreground font-semibold tracking-wider uppercase">View Density</p>
-                        <p className="text-foreground text-sm font-bold tracking-tight">{compact ? 'Compact' : 'Comfortable'}</p>
-                    </div>
-                </div>
-            </div>
-
-            <section className="border-border/80 bg-card overflow-hidden rounded-xl border shadow-xs">
+            <section className="bg-card overflow-hidden rounded-lg border">
                 <div className="flex flex-col gap-3.5 border-b p-4 lg:flex-row lg:items-end">
                     <div className="grid gap-1.5 lg:w-28">
                         <Label htmlFor="year" className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                             Year
                         </Label>
                         <Select value={String(year)} onValueChange={(value) => applyFilters({ year: Number(value) })}>
-                            <SelectTrigger id="year" className="h-11 cursor-pointer rounded-lg font-medium" data-numeric>
+                            <SelectTrigger id="year" className="h-11 font-medium" data-numeric>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -293,7 +244,7 @@ export default function TallyIndex({
                                 value={search}
                                 onChange={(event) => setSearch(event.target.value)}
                                 placeholder="Search employee name or position..."
-                                className="h-11 rounded-lg pl-10"
+                                className="h-11 pl-10"
                                 autoComplete="off"
                             />
                         </div>
@@ -307,7 +258,7 @@ export default function TallyIndex({
                             value={filters.office || ALL}
                             onValueChange={(value) => applyFilters({ office: value === ALL ? '' : value, letter: '' })}
                         >
-                            <SelectTrigger id="office" className="h-11 cursor-pointer rounded-lg">
+                            <SelectTrigger id="office" className="h-11">
                                 <SelectValue placeholder="All offices" />
                             </SelectTrigger>
                             <SelectContent>
@@ -327,7 +278,7 @@ export default function TallyIndex({
                             variant={compact ? 'secondary' : 'outline'}
                             onClick={toggleDensity}
                             aria-pressed={compact}
-                            className={cn('h-11 cursor-pointer rounded-lg font-semibold', compact && 'border-primary/30 bg-primary/10 text-primary')}
+                            className={cn('h-11 font-semibold', compact && 'border-primary/30 bg-primary/10 text-primary')}
                             title={compact ? 'Switch to comfortable rows' : 'Fit more rows on screen'}
                         >
                             <Rows3 aria-hidden="true" />
@@ -335,12 +286,7 @@ export default function TallyIndex({
                         </Button>
 
                         {hasFilters && (
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={clearFilters}
-                                className="text-muted-foreground hover:text-foreground h-11 cursor-pointer rounded-lg"
-                            >
+                            <Button type="button" variant="ghost" onClick={clearFilters} className="text-muted-foreground hover:text-foreground h-11">
                                 <X aria-hidden="true" />
                                 Clear filters
                             </Button>

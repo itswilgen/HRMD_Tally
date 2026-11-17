@@ -269,14 +269,14 @@ export default function CreditsIndex({ employees, credits, leaveTypes, offices, 
                 }
             />
 
-            <section className="border-border/80 bg-card overflow-hidden rounded-xl border shadow-xs">
+            <section className="bg-card overflow-hidden rounded-lg border">
                 <div className="flex flex-col gap-3.5 border-b p-4 lg:flex-row lg:items-end">
                     <div className="grid gap-1.5 lg:w-28">
                         <Label htmlFor="year" className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
                             Year
                         </Label>
                         <Select value={String(year)} onValueChange={(value) => applyFilters({ year: Number(value) })}>
-                            <SelectTrigger id="year" className="h-11 cursor-pointer rounded-lg font-medium" data-numeric>
+                            <SelectTrigger id="year" className="h-11 font-medium" data-numeric>
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -304,7 +304,7 @@ export default function CreditsIndex({ employees, credits, leaveTypes, offices, 
                                 value={search}
                                 onChange={(event) => setSearch(event.target.value)}
                                 placeholder="Search employee name or position..."
-                                className="h-11 rounded-lg pl-10"
+                                className="h-11 pl-10"
                                 autoComplete="off"
                             />
                         </div>
@@ -318,7 +318,7 @@ export default function CreditsIndex({ employees, credits, leaveTypes, offices, 
                             value={filters.office || ALL}
                             onValueChange={(value) => applyFilters({ office: value === ALL ? '' : value, letter: '' })}
                         >
-                            <SelectTrigger id="office" className="h-11 cursor-pointer rounded-lg">
+                            <SelectTrigger id="office" className="h-11">
                                 <SelectValue placeholder="All offices" />
                             </SelectTrigger>
                             <SelectContent>
@@ -333,12 +333,7 @@ export default function CreditsIndex({ employees, credits, leaveTypes, offices, 
                     </div>
 
                     {hasFilters && (
-                        <Button
-                            type="button"
-                            variant="ghost"
-                            onClick={clearFilters}
-                            className="text-muted-foreground hover:text-foreground h-11 cursor-pointer rounded-lg"
-                        >
+                        <Button type="button" variant="ghost" onClick={clearFilters} className="text-muted-foreground hover:text-foreground h-11">
                             <X aria-hidden="true" />
                             Clear filters
                         </Button>
@@ -399,7 +394,7 @@ export default function CreditsIndex({ employees, credits, leaveTypes, offices, 
                         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                         role="region"
                         aria-label="Unsaved changes"
-                        className="bg-card sticky bottom-4 z-30 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 pl-4 shadow-md"
+                        className="bg-card sticky bottom-4 z-30 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3 pl-4 shadow-md"
                     >
                         <div className="min-w-0 text-sm" aria-live="polite">
                             <p className="font-semibold">

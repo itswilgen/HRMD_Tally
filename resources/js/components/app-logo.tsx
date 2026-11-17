@@ -1,17 +1,19 @@
-import AppLogoIcon from './app-logo-icon';
+import { TanjaySeal } from '@/components/tanjay-seal';
 
+/**
+ * The seal and the name, at the top of the sidebar on every page. The seal's
+ * alt text is empty because the words beside it already name the system; when
+ * the sidebar collapses to icons, the link's tooltip carries the name.
+ */
 export default function AppLogo() {
     return (
         <>
-            <div className="from-sidebar-primary/30 via-sidebar-primary/20 to-sidebar-primary/10 text-sidebar-primary ring-sidebar-primary/35 flex aspect-square size-9 items-center justify-center rounded-lg bg-gradient-to-br shadow-xs ring-1 transition-transform group-hover:scale-105">
-                <AppLogoIcon className="size-5" />
-            </div>
-            <div className="ml-1.5 grid flex-1 text-left group-data-[collapsible=icon]:hidden">
-                <div className="flex items-center gap-1.5">
-                    <span className="text-2xs text-sidebar-primary font-bold tracking-[0.16em] uppercase">HRMD</span>
-                    <span className="bg-sidebar-primary/20 py-0.2 text-sidebar-primary rounded px-1 text-[9px] font-semibold">GOV</span>
-                </div>
-                <span className="truncate text-sm font-semibold tracking-tight text-white">Leave Tally Sheet</span>
+            <TanjaySeal size={36} alt="" className="size-9 group-data-[collapsible=icon]:size-8" />
+            <div className="ml-1 grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
+                <span className="text-sidebar-foreground/80 text-2xs font-semibold tracking-[0.12em] uppercase">HRMD · LGU Tanjay City</span>
+                <span className="text-sidebar-accent-foreground font-display truncate text-[0.875rem] font-semibold tracking-[-0.01em]">
+                    Leave Tally Sheet
+                </span>
             </div>
         </>
     );
