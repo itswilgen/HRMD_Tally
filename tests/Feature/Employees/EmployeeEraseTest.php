@@ -162,7 +162,12 @@ it('keeps a deleted record that has leave on file and erases the rest', function
         'middle_name' => null,
         'suffix' => null,
     ]);
-    LeaveRecord::factory()->count(2)->create(['employee_id' => $encoded->id]);
+    // Dates pinned: random ones can land on the same day and break the
+    // one-record-per-day index.
+    LeaveRecord::factory()
+        ->count(2)
+        ->sequence(['leave_date' => '2026-03-02'], ['leave_date' => '2026-03-03'])
+        ->create(['employee_id' => $encoded->id]);
 
     $this->actingAs($admin)
         ->from(route('employees.index', ['status' => 'deleted']))
