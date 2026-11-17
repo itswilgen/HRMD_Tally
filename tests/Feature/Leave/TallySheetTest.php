@@ -9,6 +9,7 @@ use App\Models\LeaveType;
 use App\Models\Office;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia;
 
@@ -57,6 +58,11 @@ function monthAt(int $month): int
     return $month - 1;
 }
 
+function canonicalLeaveType(string $code): LeaveType
+{
+    return LeaveType::query()->where('code', $code)->firstOrFail();
+}
+
 /*
 |--------------------------------------------------------------------------
 | Who may open the sheet
@@ -93,7 +99,7 @@ it('keeps the sheet away from an account with no role', function (): void {
 it('compresses consecutive whole days into one range', function (): void {
     $staff = hrStaff();
     $employee = Employee::factory()->create();
-    $type = LeaveType::factory()->create(['code' => 'MFL', 'sort_order' => 1]);
+    $type = canonicalLeaveType('MFL');
 
     encoded($employee, $type, ['2026-03-23', '2026-03-24', '2026-03-25']);
 
@@ -107,7 +113,7 @@ it('compresses consecutive whole days into one range', function (): void {
 it('separates days that do not run together with commas', function (): void {
     $staff = hrStaff();
     $employee = Employee::factory()->create();
-    $type = LeaveType::factory()->create(['code' => 'SL', 'sort_order' => 1]);
+    $type = canonicalLeaveType('SL');
 
     encoded($employee, $type, ['2026-03-06', '2026-03-09']);
 
@@ -121,7 +127,7 @@ it('separates days that do not run together with commas', function (): void {
 it('marks a half day with AM or PM and never folds it into a range', function (): void {
     $staff = hrStaff();
     $employee = Employee::factory()->create();
-    $type = LeaveType::factory()->create(['code' => 'SPL', 'sort_order' => 1]);
+    $type = canonicalLeaveType('SPL');
 
     encoded($employee, $type, ['2026-03-27'], DayPart::Pm);
 
@@ -135,7 +141,7 @@ it('marks a half day with AM or PM and never folds it into a range', function ()
 it('breaks a run of whole days where a half day falls in the middle', function (): void {
     $staff = hrStaff();
     $employee = Employee::factory()->create();
-    $type = LeaveType::factory()->create(['code' => 'VL', 'sort_order' => 1]);
+    $type = canonicalLeaveType('VL');
 
     encoded($employee, $type, ['2026-03-23']);
     encoded($employee, $type, ['2026-03-24'], DayPart::Am);
@@ -151,8 +157,8 @@ it('breaks a run of whole days where a half day falls in the middle', function (
 it('gives each leave type its own chip in the same month', function (): void {
     $staff = hrStaff();
     $employee = Employee::factory()->create();
-    $vacation = LeaveType::factory()->create(['code' => 'VL', 'sort_order' => 1]);
-    $sick = LeaveType::factory()->create(['code' => 'SL', 'sort_order' => 2]);
+    $vacation = canonicalLeaveType('VL');
+    $sick = canonicalLeaveType('SL');
 
     encoded($employee, $sick, ['2026-03-09']);
     encoded($employee, $vacation, ['2026-03-23', '2026-03-24']);
@@ -172,7 +178,7 @@ it('gives each leave type its own chip in the same month', function (): void {
 it('lists the days behind a chip so each one can be corrected', function (): void {
     $staff = hrStaff();
     $employee = Employee::factory()->create();
-    $type = LeaveType::factory()->create(['code' => 'VL', 'sort_order' => 1]);
+    $type = canonicalLeaveType('VL');
 
     encoded($employee, $type, ['2026-03-23']);
     encoded($employee, $type, ['2026-03-24'], DayPart::Pm);
@@ -197,8 +203,8 @@ it('lists the days behind a chip so each one can be corrected', function (): voi
 it('totals each leave type for the year and adds them into a grand total', function (): void {
     $staff = hrStaff();
     $employee = Employee::factory()->create();
-    $vacation = LeaveType::factory()->create(['code' => 'VL', 'sort_order' => 1]);
-    $sick = LeaveType::factory()->create(['code' => 'SL', 'sort_order' => 2]);
+    $vacation = canonicalLeaveType('VL');
+    $sick = canonicalLeaveType('SL');
 
     // 2 whole days in March and 1 in July: 3 days of vacation leave.
     encoded($employee, $vacation, ['2026-03-23', '2026-03-24', '2026-07-06']);
@@ -224,7 +230,7 @@ it('totals each leave type for the year and adds them into a grand total', funct
 it('leaves a leave type with no days blank rather than printing a zero', function (): void {
     $staff = hrStaff();
     $employee = Employee::factory()->create();
-    $type = LeaveType::factory()->create(['code' => 'VL', 'sort_order' => 1]);
+    $type = canonicalLeaveType('VL');
 
     $this->actingAs($staff)
         ->get(route('tally.index'))
@@ -237,7 +243,7 @@ it('leaves a leave type with no days blank rather than printing a zero', functio
 it('counts only the year on screen', function (): void {
     $staff = hrStaff();
     $employee = Employee::factory()->create();
-    $type = LeaveType::factory()->create(['code' => 'VL', 'sort_order' => 1]);
+    $type = canonicalLeaveType('VL');
 
     encoded($employee, $type, ['2025-12-31', '2026-01-02', '2027-01-01']);
 
@@ -265,7 +271,7 @@ it('still shows a leave type that has been retired mid-year', function (): void 
             ->where('leaveTypes.0.code', 'OLD')
             ->where(sprintf('tally.%d.grandTotalText', $employee->id), '1')
             // … but not an option when encoding something new.
-            ->where('encodableLeaveTypes', [])
+            ->where('encodableLeaveTypes', fn (Collection $types): bool => $types->pluck('code')->all() === LeaveType::query()->active()->ordered()->pluck('code')->all())
         );
 });
 

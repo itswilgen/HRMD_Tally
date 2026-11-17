@@ -65,7 +65,7 @@ function encodedDates(): array
 it('writes one row per working day in the range', function (): void {
     $staff = hrStaff();
     $employee = Employee::factory()->create();
-    $type = LeaveType::factory()->create(['code' => 'VL']);
+    $type = LeaveType::query()->where('code', 'VL')->firstOrFail();
 
     $this->actingAs($staff)
         ->post(route('leave.store'), leavePayload($employee, $type))
@@ -77,7 +77,7 @@ it('writes one row per working day in the range', function (): void {
 it('skips the weekend inside a range', function (): void {
     $staff = hrStaff();
     $employee = Employee::factory()->create();
-    $type = LeaveType::factory()->create(['code' => 'SL']);
+    $type = LeaveType::query()->where('code', 'SL')->firstOrFail();
 
     // Friday the 6th to Monday the 9th: the 7th and 8th are the weekend.
     $this->actingAs($staff)
@@ -187,7 +187,7 @@ it('refuses a half day spread over a range', function (): void {
 it('blocks a second entry that cannot share the date', function (string $existing, string $attempted): void {
     $staff = hrStaff();
     $employee = Employee::factory()->create();
-    $type = LeaveType::factory()->create(['code' => 'VL']);
+    $type = LeaveType::query()->where('code', 'VL')->firstOrFail();
 
     LeaveRecord::factory()
         ->for($employee)
@@ -310,7 +310,7 @@ it('keeps a removed day recoverable instead of deleting it', function (): void {
 it('previews the dates a range would save, the days it skips and the clashes', function (): void {
     $staff = hrStaff();
     $employee = Employee::factory()->create();
-    $type = LeaveType::factory()->create(['code' => 'SL']);
+    $type = LeaveType::query()->where('code', 'SL')->firstOrFail();
 
     LeaveRecord::factory()->for($employee)->for($type, 'leaveType')->on('2026-03-09')->create();
 
@@ -385,10 +385,10 @@ it('refuses leave against a retired leave type', function (): void {
 });
 
 it('offers only active leave types to encode against', function (): void {
-    LeaveType::factory()->create(['code' => 'VL', 'sort_order' => 1]);
     LeaveType::factory()->create(['code' => 'OLD', 'sort_order' => 2, 'is_active' => false]);
 
     $codes = array_column(app(LeaveEncodingService::class)->leaveTypeOptions(), 'code');
 
-    expect($codes)->toBe(['VL']);
+    expect($codes)->toBe(LeaveType::query()->active()->ordered()->pluck('code')->all())
+        ->and($codes)->not->toContain('OLD');
 });

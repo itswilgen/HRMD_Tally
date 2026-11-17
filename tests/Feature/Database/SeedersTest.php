@@ -31,12 +31,13 @@ it('seeds an admin and a staff account with their roles', function (): void {
         ->and($staff->isHrAdmin())->toBeFalse();
 });
 
-it('seeds the provisional leave types with distinct codes and colours', function (): void {
+it('seeds the fifteen active leave types in tally order', function (): void {
     $types = LeaveType::query()->ordered()->get();
 
-    expect($types)->toHaveCount(6)
-        ->and($types->pluck('code')->all())->toBe(['VL', 'SL', 'MFL', 'SPL', 'CTO', 'WL'])
-        ->and($types->pluck('color')->unique())->toHaveCount(6)
+    expect($types)->toHaveCount(15)
+        ->and($types->pluck('code')->all())->toBe(['VL', 'MFL', 'SL', 'ML', 'PL', 'SPL', 'SOPL', 'STL', 'VAWC', 'RP', 'SLBW', 'SEL', 'AL', 'CTO', 'WL'])
+        ->and($types->where('code', 'CTO')->first()?->name)->toBe('Compensatory Time-Off')
+        ->and($types->where('code', 'WL')->first()?->name)->toBe('Wellness Leave')
         ->and($types->every(fn (LeaveType $type): bool => $type->is_active))->toBeTrue();
 });
 

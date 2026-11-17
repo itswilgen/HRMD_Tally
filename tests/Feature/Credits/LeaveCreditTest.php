@@ -10,6 +10,7 @@ use App\Models\LeaveType;
 use App\Models\Office;
 use App\Services\EmployeeService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Inertia\Testing\AssertableInertia;
 use Spatie\Activitylog\Models\Activity;
 
@@ -26,13 +27,15 @@ beforeEach(function (): void {
 
 function creditType(string $code, bool $active = true, int $order = 1): LeaveType
 {
-    return LeaveType::factory()->create([
-        'code' => $code,
-        'name' => "{$code} Leave",
-        'color' => 'sky',
-        'is_active' => $active,
-        'sort_order' => $order,
-    ]);
+    return LeaveType::query()->firstOrCreate(
+        ['code' => $code],
+        [
+            'name' => "{$code} Leave",
+            'color' => 'sky',
+            'is_active' => $active,
+            'sort_order' => $order,
+        ],
+    );
 }
 
 function creditFigure(Employee $employee, LeaveType $type, float $days, int $year = 2026): LeaveCredit
@@ -136,9 +139,11 @@ it('marks a retired leave type so the screen can lock new figures', function ():
     $this->actingAs(hrAdmin())
         ->get(route('credits.index'))
         ->assertInertia(fn (AssertableInertia $page) => $page
-            ->where('leaveTypes.0.isActive', true)
-            ->where('leaveTypes.1.id', $retired->id)
-            ->where('leaveTypes.1.isActive', false));
+            ->where('leaveTypes', fn (Collection $types): bool => $types->contains(
+                fn (array $type): bool => $type['id'] === $retired->id && $type['isActive'] === false
+            ) && $types->contains(
+                fn (array $type): bool => $type['code'] === 'VL' && $type['isActive'] === true
+            )));
 });
 
 it('keeps someone since resigned on the year they have credits for', function (): void {

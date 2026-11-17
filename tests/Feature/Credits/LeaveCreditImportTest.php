@@ -24,7 +24,8 @@ beforeEach(function (): void {
 
 function importType(string $code, bool $active = true, int $order = 1): LeaveType
 {
-    return LeaveType::factory()->create(['code' => $code, 'name' => "{$code} Leave", 'is_active' => $active, 'sort_order' => $order]);
+    return LeaveType::query()->where('code', $code)->first()
+        ?? LeaveType::factory()->create(['code' => $code, 'name' => "{$code} Leave", 'is_active' => $active, 'sort_order' => $order]);
 }
 
 /**
@@ -92,11 +93,11 @@ it('downloads the year\'s sheet with the figures already on file', function (): 
     $rows = $sheet->toArray(null, true, false);
 
     // Retired codes take no new figure, so they are not offered to fill in.
-    expect($rows[0])->toBe(['NO.', 'EMPLOYEE NO.', 'EMPLOYEE', 'OFFICE', 'VL', 'SL'])
+    expect($rows[0])->toBe(['NO.', 'EMPLOYEE NO.', 'EMPLOYEE', 'OFFICE', 'VL', 'MFL', 'SL', 'ML', 'PL', 'SPL', 'SOPL', 'STL', 'VAWC', 'RP', 'SLBW', 'SEL', 'AL', 'CTO', 'WL'])
         ->and($rows[1][1])->toBe($employee->employee_no)
         ->and($rows[1][2])->toBe('Abalos, Maria')
         ->and((float) $rows[1][4])->toBe(15.0)
-        ->and($rows[1][5])->toBeNull();
+        ->and($rows[1][6])->toBeNull();
 });
 
 it('previews what would change, matched by employee number', function (): void {
@@ -213,7 +214,7 @@ it('finds the headings under a title and reads a comma decimal', function (): vo
 
     $preview = creditsPreview(hrAdmin(), creditsCsv([
         'LEAVE CREDITS 2026;;',
-        'EMPLOYEE NO.;VL Leave;',
+        'EMPLOYEE NO.;VL;',
         "{$employee->employee_no};7,5;",
     ]));
 

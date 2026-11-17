@@ -20,7 +20,7 @@ class LeaveTypeFactory extends Factory
     public function definition(): array
     {
         return [
-            'code' => mb_strtoupper($this->faker->unique()->lexify('??')),
+            'code' => 'TST'.mb_strtoupper($this->faker->unique()->lexify('?????')),
             'name' => ucfirst($this->faker->word()).' Leave',
             'color' => $this->faker->randomElement(['emerald', 'sky', 'amber', 'violet', 'rose', 'teal']),
             'is_active' => true,

@@ -23,7 +23,7 @@ function dashboardLeave(Employee $employee, LeaveType $type, string $date, DayPa
 }
 
 it('lists who is on leave today and counts this month the way the sheet does', function (): void {
-    $vl = LeaveType::factory()->create(['code' => 'VL']);
+    $vl = LeaveType::query()->where('code', 'VL')->firstOrFail();
     $out = Employee::factory()->create(['last_name' => 'Abalos', 'first_name' => 'Maria', 'middle_name' => null, 'suffix' => null]);
     $half = Employee::factory()->create();
     $other = Employee::factory()->create();

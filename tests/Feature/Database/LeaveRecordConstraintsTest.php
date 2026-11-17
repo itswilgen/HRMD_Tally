@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 beforeEach(function (): void {
     $this->employee = Employee::factory()->create();
-    $this->leaveType = LeaveType::factory()->create(['code' => 'SL']);
+    $this->leaveType = LeaveType::query()->where('code', 'SL')->firstOrFail();
 });
 
 it('blocks a second record for the same employee, date and day part', function (): void {
@@ -33,7 +33,7 @@ it('blocks a second record for the same employee, date and day part', function (
 it('blocks a duplicate even when the leave type differs', function (): void {
     // The unique key deliberately excludes leave_type_id: an employee cannot be
     // on two kinds of leave for the same half of the same day.
-    $other = LeaveType::factory()->create(['code' => 'VL']);
+    $other = LeaveType::query()->where('code', 'VL')->firstOrFail();
 
     LeaveRecord::factory()->create([
         'employee_id' => $this->employee->id,

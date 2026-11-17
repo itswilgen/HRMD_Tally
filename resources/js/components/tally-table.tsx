@@ -2,6 +2,7 @@ import { TallyMonthCell, type MonthState } from '@/components/tally-month-cell';
 import { MONTH_LABELS } from '@/lib/months';
 import { cn } from '@/lib/utils';
 import { type EmployeeRecord, type LeaveTypeColumn, type TallyEntry, type TallyRow } from '@/types';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { useRef, useState } from 'react';
 
@@ -56,6 +57,7 @@ export function TallyTable({
     const reduceMotion = useReducedMotion();
     const scroller = useRef<HTMLDivElement>(null);
     const [scrolled, setScrolled] = useState(false);
+    const [showAnnualTotals, setShowAnnualTotals] = useState(true);
 
     const cellPadding = compact ? 'px-2 py-1' : 'px-2.5 py-2';
     const stickyShadow = scrolled ? 'sticky-edge' : '';
@@ -110,10 +112,27 @@ export function TallyTable({
                         </th>
                         <th
                             scope="colgroup"
-                            colSpan={leaveTypes.length + 1}
+                            colSpan={showAnnualTotals ? leaveTypes.length + 1 : 1}
                             className={cn(HEAD, 'bg-table-group-head sticky top-0 z-20 h-9 px-2.5 text-center')}
                         >
-                            Total days ({year})
+                            <button
+                                type="button"
+                                aria-expanded={showAnnualTotals}
+                                aria-label={
+                                    showAnnualTotals
+                                        ? 'Collapse leave type total columns'
+                                        : `Expand all ${leaveTypes.length} leave type total columns`
+                                }
+                                onClick={() => setShowAnnualTotals((visible) => !visible)}
+                                className="border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 focus-visible:ring-ring inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-semibold focus-visible:ring-2 focus-visible:outline-none"
+                            >
+                                {showAnnualTotals ? (
+                                    <ChevronDown className="size-3.5" aria-hidden="true" />
+                                ) : (
+                                    <ChevronRight className="size-3.5" aria-hidden="true" />
+                                )}
+                                <span>Total days ({year})</span>
+                            </button>
                         </th>
                     </tr>
 
@@ -133,14 +152,15 @@ export function TallyTable({
                             </th>
                         ))}
 
-                        {leaveTypes.map((type) => (
-                            <th key={type.id} scope="col" title={type.name} className={cn(HEAD, 'sticky top-9 z-20 h-8 w-14 px-1 text-center')}>
-                                {type.code}
-                            </th>
-                        ))}
+                        {showAnnualTotals &&
+                            leaveTypes.map((type) => (
+                                <th key={type.id} scope="col" title={type.name} className={cn(HEAD, 'sticky top-9 z-20 h-8 w-14 px-1 text-center')}>
+                                    {type.code}
+                                </th>
+                            ))}
 
                         <th scope="col" className={cn(HEAD, 'bg-total-grand sticky top-9 z-20 h-8 w-16 px-1 text-center')}>
-                            All
+                            Total
                         </th>
                     </tr>
                 </thead>
@@ -232,15 +252,16 @@ export function TallyTable({
                                     />
                                 ))}
 
-                                {leaveTypes.map((type) => (
-                                    <td
-                                        key={type.id}
-                                        className={cn('border-r border-b px-1 text-center font-mono text-xs', cellPadding)}
-                                        data-numeric
-                                    >
-                                        {row.totalsText[String(type.id)] || <span className="text-muted-foreground">–</span>}
-                                    </td>
-                                ))}
+                                {showAnnualTotals &&
+                                    leaveTypes.map((type) => (
+                                        <td
+                                            key={type.id}
+                                            className={cn('border-r border-b px-1 text-center font-mono text-xs', cellPadding)}
+                                            data-numeric
+                                        >
+                                            {row.totalsText[String(type.id)] || <span className="text-muted-foreground">–</span>}
+                                        </td>
+                                    ))}
 
                                 <td
                                     className={cn('bg-total-grand border-b px-1 text-center font-mono text-xs font-semibold', cellPadding)}

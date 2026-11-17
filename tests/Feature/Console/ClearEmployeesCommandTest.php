@@ -64,7 +64,7 @@ it('clears every employee and leave record, including the deleted ones', functio
 it('keeps the offices, leave types, holidays and user accounts', function (): void {
     seedRecordsToClear();
     Office::factory()->count(2)->create();
-    LeaveType::factory()->create(['code' => 'VL']);
+    $leaveType = LeaveType::query()->where('code', 'VL')->firstOrFail();
     Holiday::factory()->create();
     $users = User::query()->count();
 
@@ -77,6 +77,7 @@ it('keeps the offices, leave types, holidays and user accounts', function (): vo
     // the lookups with it.
     expect(Office::query()->count())->toBeGreaterThan(0)
         ->and(LeaveType::query()->count())->toBeGreaterThan(0)
+        ->and(LeaveType::query()->whereKey($leaveType->id)->exists())->toBeTrue()
         ->and(Holiday::query()->count())->toBeGreaterThan(0)
         ->and(User::query()->count())->toBe($users);
 });
