@@ -12,9 +12,11 @@ Read `docs/PROJECT_CONTEXT.md` before any work. It is the source of truth for th
 - **Performance:** no N+1, date-range queries (never `YEAR(leave_date)`), always paginate, chunk exports, queue large exports.
 - **Privacy:** employee data falls under RA 10173. Use fictional seed data only; restrict the salary rate column by role.
 - **UI:** follow `docs/UI_SPEC.md` exactly (layout, design tokens, tally table, Add Leave panel, reusable components). Read it before building any page.
+- **Security:** follow `docs/SECURITY.md`. Every change meets its section 2 rules (route permission test, server-side validation, no restricted fields in page data, activity log, audited dependencies). Never run `php artisan optimize` or `config:cache` in this development folder.
 
 ## How to work
 
+- The live roadmap is the "HRMD Leave Tally Sheet Roadmap" doc (https://claude.ai/artifact/LXxFcaGEPz5g3JDzso7Kx5). Before coding, state the current phase, its next tasks and its gate; work only on the current phase unless Wilgen says otherwise.
 - Build in the phases listed in section 10 of the doc, and stop after each phase for review.
 - Each phase: Pest tests pass, Pint + Larastan + TypeScript checks are clean, then summarize what changed.
 - Open questions in section 11 are unresolved: ask instead of guessing.
