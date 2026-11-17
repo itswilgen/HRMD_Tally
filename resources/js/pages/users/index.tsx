@@ -128,7 +128,7 @@ export default function UsersIndex({ users, roles, filters, lastActiveAdminId }:
                 }
             />
 
-            <section className="border-border/80 bg-card overflow-hidden rounded-xl border shadow-xs">
+            <section className="bg-card overflow-hidden rounded-lg border">
                 <div className="flex flex-col gap-3.5 border-b p-4 lg:flex-row lg:items-end">
                     <div className="grid flex-1 gap-1.5">
                         <Label htmlFor="search" className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
@@ -145,7 +145,7 @@ export default function UsersIndex({ users, roles, filters, lastActiveAdminId }:
                                 value={search}
                                 onChange={(event) => setSearch(event.target.value)}
                                 placeholder="Name or email address"
-                                className="h-11 rounded-lg pl-10"
+                                className="h-11 pl-10"
                                 autoComplete="off"
                             />
                         </div>
@@ -156,7 +156,7 @@ export default function UsersIndex({ users, roles, filters, lastActiveAdminId }:
                             Role
                         </Label>
                         <Select value={filters.role || ALL} onValueChange={(value) => applyFilters({ role: value === ALL ? '' : value })}>
-                            <SelectTrigger id="role" className="h-11 cursor-pointer rounded-lg">
+                            <SelectTrigger id="role" className="h-11">
                                 <SelectValue placeholder="All roles" />
                             </SelectTrigger>
                             <SelectContent>
@@ -175,7 +175,7 @@ export default function UsersIndex({ users, roles, filters, lastActiveAdminId }:
                             Status
                         </Label>
                         <Select value={filters.status || ALL} onValueChange={(value) => applyFilters({ status: value === ALL ? '' : value })}>
-                            <SelectTrigger id="status" className="h-11 cursor-pointer rounded-lg">
+                            <SelectTrigger id="status" className="h-11">
                                 <SelectValue placeholder="All statuses" />
                             </SelectTrigger>
                             <SelectContent>
@@ -187,7 +187,7 @@ export default function UsersIndex({ users, roles, filters, lastActiveAdminId }:
                     </div>
 
                     {hasFilters && (
-                        <Button type="button" variant="ghost" onClick={clearFilters} className="h-11 cursor-pointer rounded-lg lg:mb-px">
+                        <Button type="button" variant="ghost" onClick={clearFilters} className="h-11 lg:mb-px">
                             <X aria-hidden="true" />
                             Clear
                         </Button>

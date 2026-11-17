@@ -51,7 +51,7 @@ export default function CreateUser({ roles }: { roles: RoleOption[] }) {
                 description="Create a sign-in for someone in the HRMD. Give them the password in person or by phone, and ask them to change it from My settings."
             />
 
-            <form onSubmit={submit} className="bg-card max-w-2xl space-y-6 rounded-xl border p-5">
+            <form onSubmit={submit} className="bg-card max-w-2xl space-y-6 rounded-lg border p-5">
                 <div className="grid gap-5 sm:grid-cols-2">
                     <FormField id="name" label="Full name" error={errors.name}>
                         <Input

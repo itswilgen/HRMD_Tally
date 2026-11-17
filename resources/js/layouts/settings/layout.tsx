@@ -28,9 +28,13 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                                 size="sm"
                                 variant="ghost"
                                 asChild
-                                className={cn('w-full justify-start', {
-                                    'bg-muted font-medium': isActiveUrl(page.url, item.url),
-                                })}
+                                aria-current={isActiveUrl(page.url, item.url) ? 'page' : undefined}
+                                className={cn(
+                                    'w-full justify-start border border-transparent',
+                                    isActiveUrl(page.url, item.url)
+                                        ? 'bg-card text-foreground border-border font-semibold'
+                                        : 'text-muted-foreground hover:text-foreground font-medium',
+                                )}
                             >
                                 <Link href={item.url} prefetch>
                                     {item.title}
@@ -43,7 +47,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                 <Separator className="lg:hidden" />
 
                 <div className="flex-1">
-                    <section className="max-w-xl space-y-12">{children}</section>
+                    <section className="bg-card max-w-2xl space-y-10 rounded-lg border p-6 sm:p-8">{children}</section>
                 </div>
             </div>
         </div>

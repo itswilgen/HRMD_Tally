@@ -148,7 +148,7 @@ export function ImportEmployeesDialog({ open, onOpenChange, canSeeSalary }: Impo
         <Dialog open={open} onOpenChange={close}>
             <DialogContent className="flex max-h-[92vh] w-[calc(100vw-2rem)] max-w-5xl flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl">
                 <DialogHeader className="border-b px-6 pt-6 pb-4 text-left">
-                    <DialogTitle className="text-lg font-bold">Import employees from Excel</DialogTitle>
+                    <DialogTitle>Import employees from Excel</DialogTitle>
                     <DialogDescription>Choose the filled-in sheet. Nothing is added until you have checked the preview.</DialogDescription>
                 </DialogHeader>
 

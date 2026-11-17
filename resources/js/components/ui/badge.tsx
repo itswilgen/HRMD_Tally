@@ -4,18 +4,18 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 const badgeVariants = cva(
-    'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-2xs font-semibold transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2',
+    'inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-2xs font-semibold transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2',
     {
         variants: {
             variant: {
-                default: 'border-transparent bg-primary text-primary-foreground shadow-2xs',
-                secondary: 'border-border/60 bg-secondary/80 text-secondary-foreground',
-                destructive: 'border-transparent bg-destructive text-destructive-foreground shadow-2xs',
-                outline: 'border-border/80 text-foreground',
-                success: 'border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-                warning: 'border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-300',
-                danger: 'border-rose-500/25 bg-rose-500/10 text-rose-700 dark:text-rose-300',
-                muted: 'border-border/50 bg-muted text-muted-foreground',
+                default: 'border-transparent bg-primary text-primary-foreground',
+                secondary: 'border-border bg-secondary text-secondary-foreground',
+                destructive: 'border-transparent bg-destructive text-destructive-foreground',
+                outline: 'border-border text-foreground',
+                success: 'border-success/25 bg-success-surface text-success',
+                warning: 'border-warning/25 bg-warning-surface text-warning',
+                danger: 'border-destructive/25 bg-destructive-surface text-destructive',
+                muted: 'border-border bg-muted text-muted-foreground',
             },
         },
         defaultVariants: {

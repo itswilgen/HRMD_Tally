@@ -158,7 +158,7 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
               container, which would stop the sticky selection bar below from
               ever sticking to the viewport.
             */}
-            <section className="border-border/80 bg-card overflow-clip rounded-xl border shadow-xs">
+            <section className="bg-card overflow-clip rounded-lg border">
                 <div className="flex flex-col gap-3.5 border-b p-4 lg:flex-row lg:items-end">
                     <div className="grid flex-1 gap-1.5">
                         <Label htmlFor="search" className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
@@ -175,7 +175,7 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                                 value={search}
                                 onChange={(event) => setSearch(event.target.value)}
                                 placeholder="Surname, first name, position or employee no."
-                                className="h-11 rounded-lg pl-10"
+                                className="h-11 pl-10"
                                 autoComplete="off"
                             />
                         </div>
@@ -189,7 +189,7 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                             value={filters.office || ALL}
                             onValueChange={(value) => applyFilters({ office: value === ALL ? '' : value, letter: '' })}
                         >
-                            <SelectTrigger id="office" className="h-11 cursor-pointer rounded-lg">
+                            <SelectTrigger id="office" className="h-11">
                                 <SelectValue placeholder="All offices" />
                             </SelectTrigger>
                             <SelectContent>
@@ -211,7 +211,7 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                             value={filters.status || 'active'}
                             onValueChange={(value) => applyFilters({ status: value === 'active' ? '' : value })}
                         >
-                            <SelectTrigger id="status" className="h-11 cursor-pointer rounded-lg">
+                            <SelectTrigger id="status" className="h-11">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -224,7 +224,7 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                     </div>
 
                     {hasFilters && (
-                        <Button type="button" variant="ghost" onClick={clearFilters} className="h-11 cursor-pointer rounded-lg lg:mb-px">
+                        <Button type="button" variant="ghost" onClick={clearFilters} className="h-11 lg:mb-px">
                             <X aria-hidden="true" />
                             Clear
                         </Button>

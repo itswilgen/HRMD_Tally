@@ -135,7 +135,7 @@ export function LeaveEntrySheet({ open, onOpenChange, target, leaveTypes, dayPar
 
                     <ul className="mt-6 flex-1 space-y-2.5">
                         {entry.records.map((record) => (
-                            <li key={record.id} className="border-border/70 bg-card rounded-xl border p-3.5 shadow-2xs transition-all">
+                            <li key={record.id} className="bg-card rounded-lg border p-3.5 transition-all">
                                 {editingId === record.id ? (
                                     <form onSubmit={save(record.id)} className="grid gap-3">
                                         <FormField id={`type-${record.id}`} label="Leave type" error={errors.leave_type_id}>

@@ -26,7 +26,7 @@ export function LetterTabs({ available, value, onChange }: LetterTabsProps) {
 
     return (
         <div
-            className="border-border/50 bg-muted/20 flex flex-wrap items-center gap-1 rounded-xl border p-1"
+            className="bg-muted/20 flex flex-wrap items-center gap-1 rounded-lg border p-1"
             role="group"
             aria-label="Filter by first letter of surname"
         >
@@ -88,7 +88,7 @@ function Tab({ label, title, selected, disabled = false, wide = false, reduceMot
                 <motion.span
                     layoutId="letter-tab-selected"
                     aria-hidden="true"
-                    className="bg-primary absolute inset-0 rounded-lg shadow-xs"
+                    className="bg-primary absolute inset-0 rounded-lg"
                     transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 30 }}
                 />
             )}

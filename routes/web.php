@@ -2,13 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeImportController;
+use App\Http\Controllers\LeaveCreditController;
+use App\Http\Controllers\LeaveCreditImportController;
 use App\Http\Controllers\LeaveRecordController;
 use App\Http\Controllers\TallyController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 /*
  * There is no public landing page: this is an internal HRMD tool, so the root
@@ -22,9 +24,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     /*
      * The yearly tally sheet and the leave behind it. Both roles encode, so
@@ -41,6 +41,32 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', [LeaveRecordController::class, 'store'])->name('store');
         Route::patch('{leave_record}', [LeaveRecordController::class, 'update'])->name('update');
         Route::delete('{leave_record}', [LeaveRecordController::class, 'destroy'])->name('destroy');
+    });
+
+    /*
+     * Leave credits: what HR granted for a year, against what was taken.
+     *
+     * Both roles read them, only an HR Admin types them, and LeaveCreditPolicy
+     * is what decides — the route list does not. Phase 1 does not earn credits:
+     * every figure here was typed off a leave card, and none of it gates
+     * encoding, so a balance may go negative and simply says so.
+     *
+     * There is no destroy route. Clearing a cell and saving removes the row,
+     * which is the same gesture as correcting it, and the activity log keeps
+     * what the figure used to be.
+     */
+    Route::prefix('credits')->name('credits.')->group(function () {
+        Route::get('/', [LeaveCreditController::class, 'index'])->name('index');
+        Route::patch('/', [LeaveCreditController::class, 'update'])->name('update');
+        Route::post('copy', [LeaveCreditController::class, 'copy'])->name('copy');
+        Route::post('grant', [LeaveCreditController::class, 'grant'])->name('grant');
+        Route::get('template', [LeaveCreditImportController::class, 'template'])->name('import.template');
+        Route::post('import/preview', [LeaveCreditImportController::class, 'preview'])->name('import.preview');
+        Route::post('import', [LeaveCreditImportController::class, 'store'])->name('import.store');
+        // Before the {employee} routes, so none of the words above is ever read
+        // as an employee id.
+        Route::get('{employee}', [LeaveCreditController::class, 'show'])->name('show');
+        Route::put('{employee}', [LeaveCreditController::class, 'save'])->name('save');
     });
 
     /*

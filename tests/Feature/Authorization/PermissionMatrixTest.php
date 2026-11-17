@@ -22,16 +22,23 @@ it('grants HR Admin every permission', function (): void {
     }
 });
 
-it('grants HR Staff only encoding, employees, tally and exports', function (): void {
+it('grants HR Staff only encoding, employees, tally, exports and reading credits', function (): void {
     $staff = hrStaff();
 
     expect($staff->getAllPermissions()->pluck('name')->sort()->values()->all())
         ->toBe([
+            Permission::ViewCredits->value,
             Permission::ManageEmployees->value,
             Permission::GenerateExports->value,
             Permission::ManageLeave->value,
             Permission::ViewTally->value,
         ]);
+});
+
+it('lets HR Staff read leave credits but keeps setting them to HR Admin', function (): void {
+    expect(hrStaff()->can(Permission::ViewCredits->value))->toBeTrue()
+        ->and(hrStaff()->can(Permission::ManageCredits->value))->toBeFalse()
+        ->and(hrAdmin()->can(Permission::ManageCredits->value))->toBeTrue();
 });
 
 it('keeps the salary rate column away from HR Staff', function (): void {

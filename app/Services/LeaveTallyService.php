@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Enums\DayPart;
 use App\Models\LeaveRecord;
 use App\Models\LeaveType;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 
@@ -60,6 +61,83 @@ class LeaveTallyService
     }
 
     /**
+     * Yearly totals per leave type only, without the month cells.
+     *
+     * The credits screens need the "days taken" half of credits − taken = left,
+     * and nothing else: no chips, no cell text, no per-day lists. Business rule 6
+     * says a total is built here or nowhere, so this lives beside forEmployees()
+     * rather than being summed again in LeaveCreditService.
+     *
+     * One grouped query for the whole page. The days conversion stays in PHP
+     * through DayPart::days() instead of becoming a CASE in the SQL, so the enum
+     * remains the only thing that decides what a half day is worth.
+     *
+     * @param  list<int>  $employeeIds
+     * @return array<int, array<int, float>> employee id => leave type id => days
+     */
+    public function totalsForEmployees(array $employeeIds, int $year): array
+    {
+        $totals = [];
+
+        foreach ($employeeIds as $employeeId) {
+            $totals[$employeeId] = [];
+        }
+
+        if ($employeeIds === []) {
+            return $totals;
+        }
+
+        $rows = LeaveRecord::query()
+            ->forEmployees($employeeIds)
+            ->forYear($year)
+            // toBase() after the scopes, so the soft-delete condition is applied
+            // but no models are hydrated for what is only ever three numbers and
+            // a string per group.
+            ->toBase()
+            ->selectRaw('employee_id, leave_type_id, day_part, count(*) as day_count')
+            ->groupBy('employee_id', 'leave_type_id', 'day_part')
+            ->get();
+
+        foreach ($rows as $row) {
+            $employeeId = (int) data_get($row, 'employee_id');
+            $leaveTypeId = (int) data_get($row, 'leave_type_id');
+            $dayPart = DayPart::from((string) data_get($row, 'day_part'));
+            $count = (int) data_get($row, 'day_count');
+
+            $totals[$employeeId][$leaveTypeId] =
+                round(($totals[$employeeId][$leaveTypeId] ?? 0.0) + $dayPart->days() * $count, 1);
+        }
+
+        return $totals;
+    }
+
+    /**
+     * Every leave day encoded between two dates, inclusive, counted the way
+     * the sheet counts them: a whole day is 1, AM or PM is 0.5.
+     *
+     * Lives here for the same reason totalsForEmployees() does — business
+     * rule 6 keeps every day total in this service — so the dashboard's
+     * "days this month" can never disagree with the sheet.
+     */
+    public function daysBetween(CarbonInterface $from, CarbonInterface $to): float
+    {
+        $rows = LeaveRecord::query()
+            ->whereBetween('leave_date', [$from->toDateString(), $to->toDateString()])
+            ->toBase()
+            ->selectRaw('day_part, count(*) as day_count')
+            ->groupBy('day_part')
+            ->get();
+
+        $days = 0.0;
+
+        foreach ($rows as $row) {
+            $days += DayPart::from((string) data_get($row, 'day_part'))->days() * (int) data_get($row, 'day_count');
+        }
+
+        return round($days, 1);
+    }
+
+    /**
      * The leave types the tally has columns and chip colours for, in HR's order.
      *
      * Inactive types are included: a type retired halfway through the year
@@ -70,7 +148,7 @@ class LeaveTallyService
      */
     public function leaveTypes(): EloquentCollection
     {
-        return LeaveType::query()->ordered()->get(['id', 'code', 'name', 'color']);
+        return LeaveType::query()->ordered()->get(['id', 'code', 'name', 'color', 'is_active']);
     }
 
     /**

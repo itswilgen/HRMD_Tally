@@ -86,7 +86,7 @@ export default function EditUser({ user, roles, lastActiveAdminId, can }: EditUs
                 actions={<StatusPill isActive={user.isActive} />}
             />
 
-            <form onSubmit={submit} className="bg-card max-w-2xl space-y-6 rounded-xl border p-5">
+            <form onSubmit={submit} className="bg-card max-w-2xl space-y-6 rounded-lg border p-5">
                 <div className="grid gap-5 sm:grid-cols-2">
                     <FormField id="name" label="Full name" error={errors.name}>
                         <Input id="name" value={data.name} onChange={(event) => setData('name', event.target.value)} required autoComplete="name" />
@@ -154,7 +154,7 @@ export default function EditUser({ user, roles, lastActiveAdminId, can }: EditUs
                 </div>
             </form>
 
-            <section className="max-w-2xl space-y-4 rounded-xl border p-5">
+            <section className="max-w-2xl space-y-4 rounded-lg border p-5">
                 <div>
                     <h2 className="text-sm font-medium">Sign-in and removal</h2>
                     <p className="text-muted-foreground mt-0.5 max-w-[65ch] text-xs">

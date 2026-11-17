@@ -57,8 +57,12 @@ echo "==> npm ci + build"
 npm ci --no-audit --no-fund --loglevel=error
 npm run build
 
-echo "==> Migrating and caching"
+echo "==> Migrating, syncing roles and caching"
 php artisan migrate --force
+# Roles and permissions come from the code (UserRole::permissions()). A new
+# permission does nothing until it exists in the database, so the roles are
+# synced on every deploy, exactly as docker/entrypoint.sh does on every start.
+php artisan db:seed --class='Database\Seeders\RoleSeeder' --force
 php artisan optimize
 
 echo

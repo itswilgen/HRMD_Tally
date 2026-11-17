@@ -219,7 +219,12 @@ it('counts the leave records an employee already has', function (): void {
     $admin = hrAdmin();
     $employee = Employee::factory()->create();
 
-    LeaveRecord::factory()->count(3)->create(['employee_id' => $employee->id]);
+    // Dates pinned: random ones can land on the same day and break the
+    // one-record-per-day index (caught by CI on 2026-11-17).
+    LeaveRecord::factory()
+        ->count(3)
+        ->sequence(['leave_date' => '2026-03-02'], ['leave_date' => '2026-03-03'], ['leave_date' => '2026-03-04'])
+        ->create(['employee_id' => $employee->id]);
 
     $this->actingAs($admin)
         ->get(route('employees.index'))
@@ -599,7 +604,10 @@ it('takes an employee off the encoding list and puts them back', function (): vo
 it('leaves the leave records of a deactivated employee alone', function (): void {
     $admin = hrAdmin();
     $employee = Employee::factory()->create();
-    LeaveRecord::factory()->count(2)->create(['employee_id' => $employee->id]);
+    LeaveRecord::factory()
+        ->count(2)
+        ->sequence(['leave_date' => '2026-03-02'], ['leave_date' => '2026-03-03'])
+        ->create(['employee_id' => $employee->id]);
 
     $this->actingAs($admin)
         ->from(route('employees.index'))
@@ -654,7 +662,10 @@ it('keeps an employee who already has leave on file and deletes the rest', funct
         'middle_name' => null,
         'suffix' => null,
     ]);
-    LeaveRecord::factory()->count(2)->create(['employee_id' => $encoded->id]);
+    LeaveRecord::factory()
+        ->count(2)
+        ->sequence(['leave_date' => '2026-03-02'], ['leave_date' => '2026-03-03'])
+        ->create(['employee_id' => $encoded->id]);
 
     $this->actingAs($admin)
         ->from(route('employees.index'))

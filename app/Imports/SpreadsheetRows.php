@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Imports;
 
-use App\Services\EmployeeImportService;
 use Maatwebsite\Excel\Concerns\Import;
 use Maatwebsite\Excel\Concerns\WithCalculatedFormulas;
 use Maatwebsite\Excel\Concerns\WithLimit;
@@ -13,35 +12,41 @@ use Maatwebsite\Excel\Concerns\WithReadFilter;
 use PhpOffice\PhpSpreadsheet\Reader\IReadFilter;
 
 /**
- * How a masterlist workbook is opened. It holds no logic of its own: the rows
- * come back as a plain array and EmployeeImportService checks them exactly as
- * it checks a CSV's.
+ * How any of this system's workbooks is opened. It holds no logic of its own:
+ * the rows come back as a plain array and the importer that asked for them
+ * checks them exactly as it checks a CSV's.
  *
  * What the concerns here settle:
  *
  * - WithMultipleSheets, returning only sheet 0, so a workbook with a sheet per
  *   office, or a notes tab, or anything else someone has left in it, has only
- *   the sheet in front read back as employees.
- * - WithCalculatedFormulas, so a name built with =CONCATENATE arrives as the
- *   name rather than as the formula.
+ *   the sheet in front read back.
+ * - WithCalculatedFormulas, so a cell built with =SUM or =CONCATENATE arrives
+ *   as its result rather than as the formula.
  * - WithReadFilter and WithLimit, so a 2 MB file that unzips into a million
  *   rows is cut off while it is being parsed instead of after.
  *
  * Two concerns are left off on purpose. SkipsEmptyRows would renumber the
  * rows, and the row number in "row 7 has a problem" has to be the row number
  * HR sees in Excel; blank rows are dropped later, by number. WithFormatData
- * would hand back what the cell displays, including "₱23,450.00" widened to
- * "#####" or a salary grade shown to two decimals, where the raw value is
- * what was actually typed.
+ * would hand back what the cell displays, including a number widened to
+ * "#####" or a figure shown to two decimals, where the raw value is what was
+ * actually typed.
  */
-class EmployeeMasterlist implements Import, WithCalculatedFormulas, WithLimit, WithMultipleSheets, WithReadFilter
+class SpreadsheetRows implements Import, WithCalculatedFormulas, WithLimit, WithMultipleSheets, WithReadFilter
 {
     /**
-     * The heading row, the rows the import allows, and one more so that a file
-     * with too many rows is still recognised as too many rather than silently
-     * cut to the limit.
+     * @param  int  $rows  the heading row, the rows the importer allows, and one
+     *                     more so that a file with too many rows is still
+     *                     recognised as too many rather than silently cut to
+     *                     the limit.
      */
-    public const ROWS = EmployeeImportService::MAX_ROWS + 2;
+    public function __construct(private readonly int $rows) {}
+
+    public function rows(): int
+    {
+        return $this->rows;
+    }
 
     /**
      * @return array<int, self>
@@ -53,12 +58,12 @@ class EmployeeMasterlist implements Import, WithCalculatedFormulas, WithLimit, W
 
     public function limit(): int
     {
-        return self::ROWS;
+        return $this->rows;
     }
 
     public function readFilter(): IReadFilter
     {
-        return new class(self::ROWS) implements IReadFilter
+        return new class($this->rows) implements IReadFilter
         {
             public function __construct(private readonly int $rows) {}
 

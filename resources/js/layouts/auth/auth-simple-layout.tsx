@@ -1,6 +1,7 @@
-import AppLogoIcon from '@/components/app-logo-icon';
+import { NetworkBackground } from '@/components/network-background';
+import { TanjaySeal } from '@/components/tanjay-seal';
 import { Link } from '@inertiajs/react';
-import { ShieldCheck } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 
 interface AuthLayoutProps {
     children: React.ReactNode;
@@ -9,41 +10,66 @@ interface AuthLayoutProps {
     description?: string;
 }
 
+/**
+ * The landing screen — sign-in and the password pages — in the HRMD banner's
+ * own look: the City of Tanjay seal and "HRMD / LGU Tanjay City" set large on
+ * the lavender-to-blue ground, with the banner's network drifting behind.
+ *
+ * The brand side is the only place in the system allowed to be this loud.
+ * The sheet on the right stays plain and readable: it is still a form.
+ */
 export default function AuthSimpleLayout({ children, title, description }: AuthLayoutProps) {
+    const reduceMotion = useReducedMotion();
+    const rise = (delay: number) =>
+        reduceMotion
+            ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.2 } }
+            : {
+                  initial: { opacity: 0, y: 12 },
+                  animate: { opacity: 1, y: 0 },
+                  transition: { duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] as const },
+              };
+
     return (
-        <div className="bg-page relative flex min-h-svh flex-col items-center justify-center overflow-hidden p-4 sm:p-8">
-            {/* Ambient luxury lighting */}
-            <div aria-hidden="true" className="bg-primary/10 pointer-events-none absolute -top-40 -left-40 size-96 rounded-full blur-3xl" />
-            <div aria-hidden="true" className="pointer-events-none absolute -right-40 -bottom-40 size-96 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="landing-canvas relative isolate min-h-svh overflow-hidden">
+            <NetworkBackground />
 
-            <div className="relative w-full max-w-md">
-                <div className="border-border/80 bg-card/95 rounded-2xl border p-6 shadow-xl backdrop-blur-md sm:p-8">
-                    <div className="flex flex-col items-center gap-3 text-center">
-                        <Link href="/" className="group flex flex-col items-center gap-2 font-medium">
-                            <div className="from-primary/20 via-primary/10 ring-primary/25 flex size-12 items-center justify-center rounded-xl bg-gradient-to-br to-transparent shadow-xs ring-1 transition-transform group-hover:scale-105">
-                                <AppLogoIcon className="text-primary size-7" />
-                            </div>
-                            <span className="sr-only">{title}</span>
-                        </Link>
+            <div className="relative mx-auto grid min-h-svh w-full max-w-6xl items-center gap-8 px-4 py-10 sm:px-8 lg:grid-cols-[minmax(0,1fr)_25rem] lg:gap-16">
+                <motion.header {...rise(0)} className="flex flex-col items-start gap-5 lg:gap-7">
+                    <Link
+                        href="/"
+                        className="flex items-center gap-4 rounded-full focus-visible:outline-2 focus-visible:outline-offset-4 lg:flex-col lg:items-start lg:gap-7"
+                    >
+                        <TanjaySeal size={112} className="drop-shadow-seal size-16 sm:size-20 lg:size-28" />
+                        <span className="grid">
+                            <span className="font-display text-landing-ink text-5xl leading-[0.95] font-bold tracking-[-0.03em] sm:text-6xl lg:text-8xl">
+                                HRMD
+                            </span>
+                            <span className="font-display text-landing-ink mt-1 text-base font-bold tracking-[0.12em] uppercase sm:text-lg lg:mt-3 lg:text-2xl">
+                                LGU Tanjay City
+                            </span>
+                        </span>
+                    </Link>
 
-                        <div className="border-primary/20 bg-primary/10 text-2xs text-primary inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-bold tracking-wider uppercase">
-                            <span className="bg-primary size-1.5 rounded-full" />
-                            HRMD Leave Tally System
+                    <p className="text-landing-muted hidden max-w-[42ch] text-base leading-relaxed sm:block">
+                        Leave Tally Sheet of the Human Resource Management Division — encode leave, read the yearly sheet, and keep leave credits in
+                        one place.
+                    </p>
+                </motion.header>
+
+                <motion.div {...rise(0.08)} className="w-full">
+                    <div className="bg-card shadow-landing rounded-xl border p-6 sm:p-8">
+                        <div className="form-rule mb-6 space-y-1 pb-4">
+                            <h1 className="text-foreground font-display text-[1.375rem] font-semibold tracking-[-0.02em]">{title}</h1>
+                            {description && <p className="text-muted-foreground text-sm">{description}</p>}
                         </div>
 
-                        <div className="space-y-1">
-                            <h1 className="text-foreground text-xl font-bold tracking-tight sm:text-2xl">{title}</h1>
-                            {description && <p className="text-muted-foreground text-xs">{description}</p>}
-                        </div>
+                        {children}
                     </div>
 
-                    <div className="mt-6">{children}</div>
-
-                    <div className="border-border/60 text-2xs text-muted-foreground mt-6 flex items-center justify-center gap-1.5 border-t pt-4 text-center">
-                        <ShieldCheck className="text-primary size-3.5" aria-hidden="true" />
-                        <span>Official HRMD Portal · RA 10173 Protected</span>
-                    </div>
-                </div>
+                    <p className="text-landing-muted mt-5 text-xs leading-relaxed">
+                        For authorised HRMD staff. Employee records are personal information protected under the Data Privacy Act of 2012 (RA 10173).
+                    </p>
+                </motion.div>
             </div>
         </div>
     );

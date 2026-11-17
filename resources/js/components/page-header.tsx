@@ -23,7 +23,7 @@ const TOP_BAR_HEIGHT_PX = 56;
  * Rendered as siblings rather than inside one wrapper, because a sticky element
  * only sticks while its parent is on screen. As direct children of the page's
  * <main>, the bar stays pinned for the whole page. The negative margins pull the
- * three pieces back together against main's gap-6.
+ * pieces back together against main's gap-6.
  */
 export function PageHeader({ eyebrow, title, description, actions, className }: PageHeaderProps) {
     const bar = useRef<HTMLDivElement>(null);
@@ -50,32 +50,30 @@ export function PageHeader({ eyebrow, title, description, actions, className }: 
 
     return (
         <>
-            {eyebrow && (
-                <div className="-mb-4">
-                    <div className="border-primary/20 bg-primary/10 text-2xs text-primary inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-semibold tracking-wider uppercase">
-                        <span className="bg-primary size-1.5 rounded-full" />
-                        {eyebrow}
-                    </div>
-                </div>
-            )}
+            {eyebrow && <p className="text-muted-foreground -mb-5 text-xs font-semibold tracking-[0.08em] uppercase">{eyebrow}</p>}
 
             <div
                 ref={bar}
                 data-stuck={stuck}
                 className={cn(
                     // bg-page so the pinned title bar is the canvas scrolling
-                    // under itself, not a white band crossing the dim page.
+                    // under itself, not a white band crossing the page.
                     'bg-page sticky top-14 z-[9] -mx-4 flex flex-col gap-3 border-b border-transparent px-4 py-2.5 md:-mx-6 md:px-6',
                     'data-[stuck=true]:border-border transition-colors duration-150 motion-reduce:transition-none',
                     'sm:flex-row sm:items-center sm:justify-between',
                     className,
                 )}
             >
-                <h1 className="text-foreground min-w-0 truncate text-2xl font-bold tracking-tight sm:text-3xl">{title}</h1>
-                {actions && <div className="flex shrink-0 flex-wrap items-center gap-2.5">{actions}</div>}
+                <h1 className="text-foreground font-display min-w-0 text-[1.5rem] leading-tight font-semibold tracking-[-0.02em] text-balance sm:text-[1.75rem] lg:truncate">
+                    {title}
+                </h1>
+                {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
             </div>
 
             {description && <p className="text-muted-foreground -mt-6 max-w-[70ch] text-sm leading-relaxed">{description}</p>}
+
+            {/* The form rule: the one ornament in the system, and it is a ruled line. */}
+            <div aria-hidden="true" className="form-rule -mt-3 h-0.5" />
         </>
     );
 }

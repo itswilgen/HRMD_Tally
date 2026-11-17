@@ -35,7 +35,7 @@ export default function CreateEmployee({ offices, employmentStatuses, can }: Cre
               of showing a select with nothing in it.
             */}
             {offices.length === 0 ? (
-                <section className="bg-card rounded-xl border">
+                <section className="bg-card rounded-lg border">
                     <EmptyState
                         icon={Building2}
                         title="There are no offices yet"
