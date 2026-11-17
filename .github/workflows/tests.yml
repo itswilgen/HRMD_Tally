@@ -1,4 +1,8 @@
-name: tests
+name: backend
+
+# Pint, Larastan and the Pest suite against a real PostgreSQL, exactly as
+# `composer run check` runs them locally, plus a dependency audit
+# (docs/SECURITY.md, rule 10).
 
 on:
   push:
@@ -10,9 +14,35 @@ on:
       - develop
       - main
 
+permissions:
+  contents: read
+
 jobs:
-  ci:
+  check:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          # The test guard in tests/TestCase.php only runs against a
+          # database whose name ends in _testing.
+          POSTGRES_DB: hrmd_tallysheet_testing
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
 
     steps:
       - name: Checkout
@@ -21,9 +51,10 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: 8.4
+          php-version: '8.4'
+          extensions: pdo_pgsql, gd, zip
           tools: composer:v2
-          coverage: xdebug
+          coverage: none
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -31,23 +62,22 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - name: Install Node Dependencies
-        run: npm ci
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          npm ci
 
-      - name: Build Assets
+      # The pages are rendered through the Vite manifest during tests.
+      - name: Build assets
         run: npm run build
 
-      - name: Create SQLite Database
-        run: touch database/database.sqlite
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
 
-      - name: Install Dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+      - name: Dependency audit
+        run: composer audit
 
-      - name: Copy Environment File
-        run: cp .env.example .env
-
-      - name: Generate Application Key
-        run: php artisan key:generate
-
-      - name: Tests
-        run: ./vendor/bin/phpunit
+      - name: Pint, Larastan, Pest
+        run: composer run check

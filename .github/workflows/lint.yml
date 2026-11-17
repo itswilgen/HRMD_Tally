@@ -1,4 +1,7 @@
-name: linter
+name: frontend
+
+# TypeScript, ESLint and Prettier, read-only: CI fails on a problem instead
+# of rewriting the code behind your back.
 
 on:
   push:
@@ -11,35 +14,40 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  quality:
+  check:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
+          tools: composer:v2
+          coverage: none
 
-      - name: Install Dependencies
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # app.tsx imports ziggy-js from the Composer package.
+      - name: Install dependencies
         run: |
-          composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-          npm install
+          composer install --no-interaction --prefer-dist --no-progress --no-scripts
+          npm ci
 
-      - name: Run Pint
-        run: vendor/bin/pint
+      - name: Types
+        run: npm run types
 
-      - name: Format Frontend
-        run: npm run format
-
-      - name: Lint Frontend
+      - name: Lint
         run: npm run lint
 
-      # - name: Commit Changes
-      #   uses: stefanzweifel/git-auto-commit-action@v5
-      #   with:
-      #     commit_message: fix code style
-      #     commit_options: '--no-verify'
+      - name: Formatting
+        run: npm run format:check
