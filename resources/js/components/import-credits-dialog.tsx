@@ -171,7 +171,7 @@ export function ImportCreditsDialog({ open, onOpenChange, year }: ImportCreditsD
         <Dialog open={open} onOpenChange={close}>
             <DialogContent className="flex max-h-[92vh] w-[calc(100vw-2rem)] max-w-4xl flex-col gap-0 overflow-hidden p-0 sm:max-w-4xl">
                 <DialogHeader className="border-b px-6 pt-6 pb-4 text-left">
-                    <DialogTitle className="text-lg font-bold">Import {year} credits from Excel</DialogTitle>
+                    <DialogTitle>Import {year} credits from Excel</DialogTitle>
                     <DialogDescription>Choose the filled-in sheet. Nothing is saved until you have checked what will change.</DialogDescription>
                 </DialogHeader>
 
