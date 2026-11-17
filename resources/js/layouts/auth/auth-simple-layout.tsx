@@ -40,17 +40,20 @@ export default function AuthSimpleLayout({ children, title, description }: AuthL
                     <Link
                         href="/"
                         aria-label="HRMD, LGU Tanjay City — Leave Tally Sheet"
-                        className="flex flex-col items-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4"
+                        className="flex items-center gap-4 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-offset-4"
                     >
-                        <TanjaySeal size={80} alt="" className="drop-shadow-seal short:size-14 size-[4.5rem] sm:size-20" />
-                        <span className="font-display text-landing-ink short:mt-3 short:text-4xl mt-4 text-5xl leading-none font-bold tracking-[-0.03em]">
-                            HRMD
-                        </span>
-                        <span className="font-display text-landing-ink mt-2 text-sm font-bold tracking-[0.18em] uppercase sm:text-base">
-                            LGU Tanjay City
+                        {/* The banner's own lockup: seal on the left, the name beside it. */}
+                        <TanjaySeal size={80} alt="" className="drop-shadow-seal short:size-14 size-16 sm:size-[4.5rem]" />
+                        <span className="grid">
+                            <span className="font-display text-landing-ink short:text-4xl text-5xl leading-none font-bold tracking-[-0.03em]">
+                                HRMD
+                            </span>
+                            <span className="font-display text-landing-ink mt-1.5 text-sm font-bold tracking-[0.18em] uppercase sm:text-base">
+                                LGU Tanjay City
+                            </span>
                         </span>
                     </Link>
-                    <p className="text-landing-muted short:hidden mt-2 text-sm">Leave Tally Sheet · Human Resource Management Division</p>
+                    <p className="text-landing-muted short:hidden mt-4 text-sm">Leave Tally Sheet · Human Resource Management Division</p>
                 </motion.header>
 
                 <motion.div {...rise(0.08)}>
