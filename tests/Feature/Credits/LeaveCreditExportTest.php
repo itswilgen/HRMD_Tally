@@ -9,10 +9,8 @@ use App\Models\LeaveRecord;
 use App\Models\LeaveType;
 use App\Models\Office;
 use App\Models\User;
-use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Spatie\Activitylog\Models\Activity;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /*
 | Credits export (PROJECT_CONTEXT 6.1, rule 22): granted · taken · left per
@@ -54,10 +52,7 @@ function exportCreditSheet(User $user, array $query = []): Worksheet
     $response = test()->actingAs($user)->get(route('credits.export', ['year' => exportCreditYear(), ...$query]));
     $response->assertOk();
 
-    /** @var BinaryFileResponse $file */
-    $file = $response->baseResponse;
-
-    return IOFactory::load($file->getFile()->getPathname())->getSheet(0);
+    return loadWorkbook((string) $response->getContent())->getSheet(0);
 }
 
 /**

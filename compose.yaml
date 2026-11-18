@@ -37,7 +37,10 @@ services:
     env_file: .env
     environment: *app-environment
     user: www-data
-    command: ["php", "artisan", "queue:work", "--tries=1", "--sleep=3", "--max-time=3600"]
+    # Builds big prints and exports in the background (PROJECT_CONTEXT 5.7). A
+    # 1,000-employee PDF peaks near 500 MB, so the worker may grow to 1 GB
+    # before it restarts itself, instead of restarting after every print.
+    command: ["php", "artisan", "queue:work", "--tries=1", "--sleep=3", "--max-time=3600", "--memory=1024"]
     # The image's health check calls the web server, which this container doesn't run.
     healthcheck:
       disable: true

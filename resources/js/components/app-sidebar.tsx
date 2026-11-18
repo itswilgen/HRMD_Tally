@@ -12,7 +12,19 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavGroup } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Building2, CalendarOff, CalendarRange, Contact, LayoutDashboard, Scale, Signature, SlidersHorizontal, Tags, UsersRound } from 'lucide-react';
+import {
+    Building2,
+    CalendarOff,
+    CalendarRange,
+    Contact,
+    FolderDown,
+    LayoutDashboard,
+    Scale,
+    Signature,
+    SlidersHorizontal,
+    Tags,
+    UsersRound,
+} from 'lucide-react';
 import AppLogo from './app-logo';
 
 /*
@@ -33,6 +45,8 @@ const navGroups: NavGroup[] = [
             { title: 'Leave tally', url: '/tally', icon: CalendarRange, permission: 'viewTally' },
             { title: 'Leave credits', url: '/credits', icon: Scale, permission: 'viewCredits' },
             { title: 'Employees', url: '/employees', icon: Contact, permission: 'manageEmployees' },
+            // Big prints and exports wait here (5.7); everyone who exports has one.
+            { title: 'Downloads', url: '/downloads', icon: FolderDown, permission: 'generateExports' },
         ],
     },
     {

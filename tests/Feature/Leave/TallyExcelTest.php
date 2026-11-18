@@ -12,12 +12,10 @@ use App\Models\User;
 use App\Services\LeaveTallyService;
 use App\Services\TallyFilters;
 use App\Services\TallySheetPrint;
-use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Spatie\Activitylog\Models\Activity;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /*
 | Excel export of the tally (PROJECT_CONTEXT 5.7): one worksheet per office,
@@ -37,12 +35,7 @@ function downloadWorkbook(User $user, array $query = []): Spreadsheet
     $response = test()->actingAs($user)->get(route('tally.excel', ['year' => 2026, ...$query]));
     $response->assertOk();
 
-    expect($response->baseResponse)->toBeInstanceOf(BinaryFileResponse::class);
-
-    /** @var BinaryFileResponse $file */
-    $file = $response->baseResponse;
-
-    return IOFactory::load($file->getFile()->getPathname());
+    return loadWorkbook((string) $response->getContent());
 }
 
 /**

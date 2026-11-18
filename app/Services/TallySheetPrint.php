@@ -151,18 +151,6 @@ class TallySheetPrint
         return ['office' => $office, 'rows' => $rows, 'typeColumns' => $typeColumns];
     }
 
-    /** What the sheet is for: one office's name, or "All offices". */
-    public function officeName(TallyFilters $filters): string
-    {
-        if ($filters->officeId === 0) {
-            return 'All offices';
-        }
-
-        $name = Office::query()->whereKey($filters->officeId)->value('name');
-
-        return is_string($name) ? $name : 'Unknown office';
-    }
-
     /**
      * The search and letter filters, said on the sheet, so a partial printout
      * is never mistaken for the whole office.

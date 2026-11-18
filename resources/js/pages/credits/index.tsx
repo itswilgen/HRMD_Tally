@@ -232,13 +232,12 @@ export default function CreditsIndex({ employees, credits, leaveTypes, offices, 
                             {/*
                               A download for both roles (rule 22): the year as
                               filtered on screen, granted · taken · left. A
-                              plain link, so the browser saves the file.
+                              plain link: a small file downloads, a big one opens Downloads.
                             */}
                             {can.export && (
                                 <Button variant="outline" asChild>
                                     <a
                                         href={route('credits.export', { year, ...filters })}
-                                        download
                                         title="Download granted, taken and left for this year as an Excel workbook"
                                         aria-label="Export to Excel"
                                     >

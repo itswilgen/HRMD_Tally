@@ -198,11 +198,10 @@ export default function TallyIndex({
                                         Print (PDF)
                                     </a>
                                 </Button>
-                                {/* A download: the browser saves the .xlsx, the page stays put. */}
+                                {/* The server says "attachment", so a small file downloads and the page stays put; a big one goes to Downloads. */}
                                 <Button variant="outline" asChild className="hidden lg:inline-flex">
                                     <a
                                         href={route('tally.excel', { year, ...filters })}
-                                        download
                                         title="Downloads the same sheet as an Excel workbook, one worksheet per office"
                                     >
                                         <FileSpreadsheet aria-hidden="true" />

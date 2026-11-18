@@ -235,6 +235,14 @@ Decided with HR on 2026-11-18:
 - Set up to print from Excel as well: long bond (Folio), landscape, one page wide, the heading row repeated on every page; No. and the name columns stay in view while scrolling.
 - The rate is left out for anyone who cannot see it on screen. Exporting needs the export permission and is in the activity log.
 
+**Large exports in the background** (built 2026-11-18):
+
+- A request runs in the background when it would be slow: the tally PDF above **300 employees** (1,000 measured at 10 s and 480 MB), either Excel export above **5,000** (1,000 measured at under 1.5 s). Anything smaller downloads straight away, as before.
+- A background export opens **Downloads**, which says what is being prepared, refreshes itself, and offers the file when it is ready, or says what went wrong.
+- Downloads lists the signed-in user's own exports. **Only the person who asked for a file can download it**: a file can hold salary rates (RA 10173).
+- Files are kept for **7 days**, then deleted with their row. The clean-up runs whenever Downloads is opened or an export is started, so it needs no scheduler.
+- The file is built by the queue worker with the same services as the straight download, so the two are the same file. Requesting it is in the activity log, as before.
+
 ### 5.8 Activity log
 
 - Records create, update and delete of employees, leave records and settings: user, action, old and new values, date and time.

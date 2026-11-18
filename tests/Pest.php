@@ -6,6 +6,8 @@ use App\Enums\UserRole;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
@@ -101,4 +103,19 @@ function hrStaff(array $attributes = []): User
 function something()
 {
     // ..
+}
+
+/**
+ * Reads a downloaded .xlsx back, cell by cell, as Excel would open it.
+ */
+function loadWorkbook(string $bytes): Spreadsheet
+{
+    $path = tempnam(sys_get_temp_dir(), 'hrmd-xlsx-');
+    file_put_contents((string) $path, $bytes);
+
+    try {
+        return IOFactory::load((string) $path);
+    } finally {
+        @unlink((string) $path);
+    }
 }

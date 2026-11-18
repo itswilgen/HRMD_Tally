@@ -3,16 +3,15 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeImportController;
 use App\Http\Controllers\EmployeeLeaveHistoryController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\LeaveCreditController;
-use App\Http\Controllers\LeaveCreditExportController;
 use App\Http\Controllers\LeaveCreditImportController;
 use App\Http\Controllers\LeaveRecordController;
 use App\Http\Controllers\TallyController;
-use App\Http\Controllers\TallyExcelController;
-use App\Http\Controllers\TallyPrintController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -40,9 +39,13 @@ Route::middleware(['auth'])->group(function () {
      */
     Route::get('tally', [TallyController::class, 'index'])->name('tally.index');
     // Print (PDF): same filters and rows as the screen, one sheet per office (5.7).
-    Route::get('tally/print', TallyPrintController::class)->name('tally.print');
+    Route::get('tally/print', [ExportController::class, 'tallyPdf'])->name('tally.print');
     // Excel: the same sheet as a workbook, one worksheet per office (5.7).
-    Route::get('tally/excel', TallyExcelController::class)->name('tally.excel');
+    Route::get('tally/excel', [ExportController::class, 'tallyExcel'])->name('tally.excel');
+
+    // Downloads: the user's own background exports and their files (5.7).
+    Route::get('downloads', [DownloadController::class, 'index'])->name('downloads.index');
+    Route::get('downloads/{export}', [DownloadController::class, 'download'])->name('downloads.show');
 
     Route::prefix('leave')->name('leave.')->group(function () {
         Route::post('preview', [LeaveRecordController::class, 'preview'])->name('preview');
@@ -70,7 +73,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('grant', [LeaveCreditController::class, 'grant'])->name('grant');
         Route::get('template', [LeaveCreditImportController::class, 'template'])->name('import.template');
         // Excel: granted · taken · left for the year, same filters as the page (rule 22).
-        Route::get('export', LeaveCreditExportController::class)->name('export');
+        Route::get('export', [ExportController::class, 'creditsExcel'])->name('export');
         Route::post('import/preview', [LeaveCreditImportController::class, 'preview'])->name('import.preview');
         Route::post('import', [LeaveCreditImportController::class, 'store'])->name('import.store');
         // Before the {employee} routes, so none of the words above is ever read
