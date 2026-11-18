@@ -11,7 +11,7 @@ import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { type BreadcrumbItem, type ChipColorOption, type LeaveTypeRow } from '@/types';
 import { Head, type InertiaFormProps, router, useForm } from '@inertiajs/react';
-import { ArchiveRestore, ArrowDown, ArrowUp, Check, Loader2, Lock, Pencil, Plus, Tags, Trash2, X } from 'lucide-react';
+import { Archive, ArchiveRestore, ArrowDown, ArrowUp, Check, Loader2, Lock, Pencil, Plus, Tags, Trash2, X } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { type FormEventHandler, useState } from 'react';
 
@@ -90,7 +90,7 @@ function LeaveTypeFields({
                     {codeLocked && (
                         <p id={`${idPrefix}-code-locked`} className="text-muted-foreground flex items-center gap-1 text-xs">
                             <Lock aria-hidden="true" className="size-3" />
-                            Locked: already on records
+                            Locked: in use
                         </p>
                     )}
                     <InputError message={errors.code} />
@@ -326,7 +326,7 @@ export default function LeaveTypes({ leaveTypes, colors, can }: LeaveTypesPagePr
                                                 ) : (
                                                     <Check aria-hidden="true" />
                                                 )}
-                                                Save {type.code}
+                                                Save changes
                                             </Button>
                                         </div>
                                     </form>
@@ -357,7 +357,8 @@ export default function LeaveTypes({ leaveTypes, colors, can }: LeaveTypesPagePr
                                         </div>
 
                                         {can.manage && (
-                                            <div className="flex shrink-0 flex-wrap items-center gap-1.5 pl-9 sm:pl-0">
+                                            // On a phone: the arrows on the left, the actions on the right, one line.
+                                            <div className="flex shrink-0 items-center justify-between gap-1.5 sm:justify-start">
                                                 <div className="flex items-center" role="group" aria-label={`Order of ${type.code}`}>
                                                     <Button
                                                         type="button"
@@ -384,46 +385,69 @@ export default function LeaveTypes({ leaveTypes, colors, can }: LeaveTypesPagePr
                                                         <ArrowDown aria-hidden="true" />
                                                     </Button>
                                                 </div>
-                                                <Button type="button" size="sm" variant="outline" onClick={() => startEditing(type)}>
-                                                    <Pencil aria-hidden="true" />
-                                                    Edit
-                                                </Button>
-                                                {type.isActive ? (
-                                                    <Button
-                                                        type="button"
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        disabled={busy}
-                                                        onClick={() => setActive(type, false)}
-                                                        title="Stop offering this code when encoding. Its records stay."
-                                                    >
-                                                        Retire
+                                                <div className="flex items-center gap-1.5">
+                                                    <Button type="button" size="sm" variant="outline" onClick={() => startEditing(type)}>
+                                                        <Pencil aria-hidden="true" />
+                                                        Edit
                                                     </Button>
-                                                ) : (
-                                                    <Button
-                                                        type="button"
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        disabled={busy}
-                                                        onClick={() => setActive(type, true)}
-                                                    >
-                                                        <ArchiveRestore aria-hidden="true" />
-                                                        Restore
-                                                    </Button>
-                                                )}
-                                                {!type.inUse && (
-                                                    <Button
-                                                        type="button"
-                                                        size="sm"
-                                                        variant="ghost"
-                                                        disabled={busy}
-                                                        onClick={() => setDeleting(type)}
-                                                        className="text-destructive hover:text-destructive"
-                                                    >
-                                                        <Trash2 aria-hidden="true" />
-                                                        Delete
-                                                    </Button>
-                                                )}
+                                                    {/*
+                                                  Fixed-width slots, so Edit, Retire and Delete line up down the
+                                                  list whatever each row may do. A type in use cannot be deleted:
+                                                  the slot says so instead of leaving a gap.
+                                                */}
+                                                    <span className="flex justify-start sm:w-[6.25rem]">
+                                                        {type.isActive ? (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                disabled={busy}
+                                                                onClick={() => setActive(type, false)}
+                                                                title="Stop offering this code when encoding. Its records stay."
+                                                            >
+                                                                <Archive aria-hidden="true" />
+                                                                Retire
+                                                            </Button>
+                                                        ) : (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                disabled={busy}
+                                                                onClick={() => setActive(type, true)}
+                                                                title="Offer this code again when encoding."
+                                                            >
+                                                                <ArchiveRestore aria-hidden="true" />
+                                                                Restore
+                                                            </Button>
+                                                        )}
+                                                    </span>
+                                                    <span className="flex w-14 justify-center sm:w-[5.5rem] sm:justify-start">
+                                                        {type.inUse ? (
+                                                            <Badge
+                                                                variant="muted"
+                                                                className="sm:ml-3"
+                                                                title="Used on records, so it can be retired but not deleted"
+                                                            >
+                                                                In use
+                                                            </Badge>
+                                                        ) : (
+                                                            <Button
+                                                                type="button"
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                disabled={busy}
+                                                                onClick={() => setDeleting(type)}
+                                                                className="text-destructive hover:text-destructive"
+                                                                aria-label={`Delete ${type.code}`}
+                                                            >
+                                                                <Trash2 aria-hidden="true" />
+                                                                {/* An icon on a phone, where the row has no room for the word. */}
+                                                                <span className="hidden sm:inline">Delete</span>
+                                                            </Button>
+                                                        )}
+                                                    </span>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
