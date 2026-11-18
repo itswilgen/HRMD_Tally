@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavGroup } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Building2, CalendarRange, Contact, LayoutDashboard, Scale, SlidersHorizontal, UsersRound } from 'lucide-react';
+import { Building2, CalendarRange, Contact, LayoutDashboard, Scale, SlidersHorizontal, Tags, UsersRound } from 'lucide-react';
 import AppLogo from './app-logo';
 
 /*
@@ -43,6 +43,8 @@ const navGroups: NavGroup[] = [
             // filtered by office; the add and rename controls are what the
             // permission gates, on the page itself.
             { title: 'Offices', url: '/settings/offices', icon: Building2 },
+            // Same reasoning: encoders read the codes, an HR Admin changes them.
+            { title: 'Leave types', url: '/settings/leave-types', icon: Tags },
             { title: 'My settings', url: '/settings/profile', icon: SlidersHorizontal },
         ],
     },

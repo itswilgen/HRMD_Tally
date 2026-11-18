@@ -36,6 +36,14 @@ class LeaveTypePolicy
     }
 
     /**
+     * The order is one setting for the whole list, so it is asked of the class.
+     */
+    public function reorder(User $user): bool
+    {
+        return $user->can(Permission::ManageSettings->value);
+    }
+
+    /**
      * A code that has ever been used must be deactivated instead of deleted, or
      * historical tally cells would lose the letters printed on the paper sheet.
      */
@@ -46,7 +54,7 @@ class LeaveTypePolicy
         }
 
         return $leaveType->isInUse()
-            ? Response::deny("{$leaveType->code} is already used on leave records. Switch it off instead of deleting it, so past tallies keep their codes.")
+            ? Response::deny("{$leaveType->code} is already used on leave records or credit figures. Retire it instead, so past tallies keep their codes.")
             : Response::allow();
     }
 }

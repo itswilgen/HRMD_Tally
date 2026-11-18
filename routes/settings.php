@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
@@ -38,6 +39,23 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [OfficeController::class, 'store'])->name('store');
         Route::patch('{office}', [OfficeController::class, 'update'])->name('update');
         Route::delete('{office}', [OfficeController::class, 'destroy'])->name('destroy');
+    });
+
+    /*
+     * Leave types (business rule 8). Same shape as offices: everyone may read
+     * the codes, only an HR Admin changes them. LeaveTypePolicy enforces both,
+     * including that a code already on records is retired, never deleted.
+     * The order route comes before {leaveType} so "order" is never taken for
+     * an id.
+     */
+    Route::prefix('settings/leave-types')->name('leave-types.')->group(function () {
+        Route::get('/', [LeaveTypeController::class, 'index'])->name('index');
+        Route::post('/', [LeaveTypeController::class, 'store'])->name('store');
+        Route::put('order', [LeaveTypeController::class, 'reorder'])->name('reorder');
+        Route::patch('{leaveType}', [LeaveTypeController::class, 'update'])->name('update');
+        Route::patch('{leaveType}/retire', [LeaveTypeController::class, 'retire'])->name('retire');
+        Route::patch('{leaveType}/restore', [LeaveTypeController::class, 'restore'])->name('restore');
+        Route::delete('{leaveType}', [LeaveTypeController::class, 'destroy'])->name('destroy');
     });
 
     /*

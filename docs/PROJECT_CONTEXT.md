@@ -217,7 +217,13 @@ These rules are enforced on the server and covered by automated tests.
 5. **Tally text.** Consecutive days of the same leave type are compressed: 23, 24, 25 → "23–25". Separate days are comma-separated: "4, 9". Half-days show AM or PM: "13 PM".
 6. **One source of truth.** Tally text and totals are built only by the backend tally service, so the screen, PDF and Excel always match.
 7. **Inactive employees** stay in past years' tallies and are hidden from encoding and from the current year by default.
-8. **Leave types** are managed in Settings, not hardcoded. A leave type that has records can be deactivated but not deleted.
+8. **Leave types** are managed in Settings, not hardcoded. A leave type that is in use can be retired (deactivated) but not deleted.
+   - Only an HR Admin adds, edits, orders, retires or deletes a type; everyone signed in can read the list.
+   - A **code** is 1–10 capital letters or digits and unique. It is **locked once the type is in use**: any leave record (deleted records included) or any credit figure, so a printed sheet and the screen never disagree about what "SL" meant. The name and colour can change at any time.
+   - The **colour** is one of the chip palette keys (sky, amber, violet, teal, slate, emerald, rose); the palette itself lives in the design tokens.
+   - **Order** is the order of the encoding picker and of the tally's total columns. A new type goes last.
+   - A **retired** type keeps its records, its tally column and its credit figures, but is not offered when encoding (rule 17 for credits). It can be restored.
+   - Every add, edit, reorder, retire, restore and delete is in the activity log.
 9. **Soft deletes.** Deleted leave records and employees are recoverable and recorded in the activity log. The one exception is the permanent erase in section 5.2, which is a separate HR Admin permission, reaches only records that are already deleted and never a record with leave on file.
 10. **Year boundaries.** A range crossing December 31 is split into its proper years automatically.
 
