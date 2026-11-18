@@ -348,7 +348,17 @@ export default function EmployeesIndex({ employees, offices, letters, filters }:
                                         */}
                                         <div className="max-w-[52vw] min-w-0 md:max-w-none">
                                             <div className="flex items-center gap-2">
-                                                <span className="truncate font-medium">{employee.listName}</span>
+                                                {showingDeleted ? (
+                                                    <span className="truncate font-medium">{employee.listName}</span>
+                                                ) : (
+                                                    <Link
+                                                        href={route('employees.leave', employee.id)}
+                                                        title={`Leave history of ${employee.listName}`}
+                                                        className="hover:text-primary focus-visible:ring-ring truncate rounded-sm font-medium underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+                                                    >
+                                                        {employee.listName}
+                                                    </Link>
+                                                )}
                                                 {showingDeleted ? (
                                                     <Badge variant="danger" className="shrink-0">
                                                         Deleted {formatDeletedOn(employee.deletedAt)}

@@ -201,7 +201,12 @@ Each module below lists what the user must be able to do; the Yearly Tally page 
 
 ### 5.6 Employee leave history
 
-- Per-employee page listing every leave record for a selected year, with totals per type.
+- Per-employee page listing every leave record across all years, newest year first, with totals per type for each year (confirmed in the roadmap, 2026-11-17).
+- Opened from the employee's name on the masterlist and on the tally sheet. Both roles may read it, as both may read the tally.
+- Each year shows the twelve month cells and totals exactly as the tally prints them, built by the same tally service (rule 6), then every day: date, leave type, whole day or AM/PM, remarks, and who encoded it.
+- Deleted leave records are not listed; they are not on the tally either.
+- Read-only. Days are added, changed and deleted on the tally, where the double-encoding and holiday rules run.
+- The monthly rate is not shown here, so the page needs no salary permission (RA 10173).
 
 ### 5.7 Print and export
 
