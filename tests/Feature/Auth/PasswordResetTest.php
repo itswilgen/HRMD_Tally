@@ -2,74 +2,51 @@
 
 declare(strict_types=1);
 
-namespace Tests\Feature\Auth;
-
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
-use Tests\TestCase;
+use Inertia\Testing\AssertableInertia;
 
-class PasswordResetTest extends TestCase
-{
-    use RefreshDatabase;
+/**
+ * Self-service password reset is removed on purpose: only an HR Admin sets a
+ * password, under Settings → User accounts (see "it resets a password when one
+ * is given" in UserManagementTest). These tests exist so nobody restores the
+ * starter kit's forgot-password routes by accident.
+ */
+it('has no forgot-password page', function (): void {
+    $this->get('/forgot-password')->assertNotFound();
+});
 
-    public function test_reset_password_link_screen_can_be_rendered()
-    {
-        $response = $this->get('/forgot-password');
+it('sends no reset link, whatever is posted', function (): void {
+    Notification::fake();
+    $user = User::factory()->create();
 
-        $response->assertStatus(200);
+    $this->post('/forgot-password', ['email' => $user->email])->assertNotFound();
+
+    Notification::assertNothingSent();
+    Notification::assertNotSentTo($user, ResetPassword::class);
+});
+
+it('has no reset-password page or form', function (): void {
+    $this->get('/reset-password/any-token')->assertNotFound();
+    $this->post('/reset-password', [
+        'token' => 'any-token',
+        'email' => 'someone@example.com',
+        'password' => 'Tally-Sheet-2026',
+        'password_confirmation' => 'Tally-Sheet-2026',
+    ])->assertNotFound();
+});
+
+it('has no named password reset routes', function (): void {
+    foreach (['password.request', 'password.email', 'password.reset', 'password.store'] as $name) {
+        expect(app('router')->has($name))->toBeFalse("{$name} should not exist");
     }
+});
 
-    public function test_reset_password_link_can_be_requested()
-    {
-        Notification::fake();
-
-        $user = User::factory()->create();
-
-        $this->post('/forgot-password', ['email' => $user->email]);
-
-        Notification::assertSentTo($user, ResetPassword::class);
-    }
-
-    public function test_reset_password_screen_can_be_rendered()
-    {
-        Notification::fake();
-
-        $user = User::factory()->create();
-
-        $this->post('/forgot-password', ['email' => $user->email]);
-
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
-            $response = $this->get('/reset-password/'.$notification->token);
-
-            $response->assertStatus(200);
-
-            return true;
-        });
-    }
-
-    public function test_password_can_be_reset_with_valid_token()
-    {
-        Notification::fake();
-
-        $user = User::factory()->create();
-
-        $this->post('/forgot-password', ['email' => $user->email]);
-
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
-            $response = $this->post('/reset-password', [
-                'token' => $notification->token,
-                'email' => $user->email,
-                'password' => 'password',
-                'password_confirmation' => 'password',
-            ]);
-
-            $response
-                ->assertSessionHasNoErrors()
-                ->assertRedirect(route('login'));
-
-            return true;
-        });
-    }
-}
+it('tells people on the login page to ask an HR Admin instead', function (): void {
+    $this->get(route('login'))
+        ->assertOk()
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('auth/login')
+            ->missing('canResetPassword'));
+});
