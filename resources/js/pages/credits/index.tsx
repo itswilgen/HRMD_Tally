@@ -14,7 +14,7 @@ import AppLayout from '@/layouts/app-layout';
 import { figurePayload, looksLikeFigure } from '@/lib/credits';
 import { type BreadcrumbItem, type CreditColumn, type CreditRow, type EmployeeRecord, type OfficeOption, type Paginated } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { Copy, FileUp, ListPlus, Loader2, Save, Search, UsersRound, X } from 'lucide-react';
+import { Copy, FileSpreadsheet, FileUp, ListPlus, Loader2, Save, Search, UsersRound, X } from 'lucide-react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -34,7 +34,7 @@ interface CreditsIndexProps {
     year: number;
     years: number[];
     filters: CreditFilters;
-    can: { manage: boolean };
+    can: { manage: boolean; export: boolean };
 }
 
 type OpenDialog = 'grant' | 'copy' | 'import' | null;
@@ -227,43 +227,70 @@ export default function CreditsIndex({ employees, credits, leaveTypes, offices, 
                 title={`Leave credits — ${year}`}
                 description="What each employee was granted for the year, against the days the tally counts as taken. A blank cell means no figure yet; 0 means none was granted."
                 actions={
-                    can.manage && (
+                    (can.manage || can.export) && (
                         <>
                             {/*
+                              A download for both roles (rule 22): the year as
+                              filtered on screen, granted · taken · left. A
+                              plain link: a small file downloads, a big one opens Downloads.
+                            */}
+                            {can.export && (
+                                <Button variant="outline" asChild>
+                                    <a
+                                        href={route('credits.export', { year, ...filters })}
+                                        title="Download granted, taken and left for this year as an Excel workbook"
+                                        aria-label="Export to Excel"
+                                    >
+                                        <FileSpreadsheet aria-hidden="true" />
+                                        <span className="hidden xl:inline">Export</span>
+                                    </a>
+                                </Button>
+                            )}
+                            {can.manage && (
+                                <>
+                                    {/*
                               Icon-only below xl, so the title is never cut to
                               "Leave c…" beside four buttons. The label stays for
                               screen readers and as a tooltip. Downloading the
                               sheet lives in the Import dialog, where it is the
                               first step of the same job.
                             */}
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setDialog('import')}
-                                disabled={dirty}
-                                title={busyTitle ?? 'Download the year’s sheet, fill it in Excel and import it'}
-                                aria-label="Import from Excel"
-                                className="cursor-pointer"
-                            >
-                                <FileUp aria-hidden="true" />
-                                <span className="hidden xl:inline">Import</span>
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => setDialog('copy')}
-                                disabled={dirty}
-                                title={busyTitle ?? 'Copy another year’s figures into this one'}
-                                aria-label="Copy a year"
-                                className="cursor-pointer"
-                            >
-                                <Copy aria-hidden="true" />
-                                <span className="hidden xl:inline">Copy a year</span>
-                            </Button>
-                            <Button type="button" onClick={() => setDialog('grant')} disabled={dirty} title={busyTitle} className="cursor-pointer">
-                                <ListPlus aria-hidden="true" />
-                                Grant to all
-                            </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setDialog('import')}
+                                        disabled={dirty}
+                                        title={busyTitle ?? 'Download the year’s sheet, fill it in Excel and import it'}
+                                        aria-label="Import from Excel"
+                                        className="cursor-pointer"
+                                    >
+                                        <FileUp aria-hidden="true" />
+                                        <span className="hidden xl:inline">Import</span>
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setDialog('copy')}
+                                        disabled={dirty}
+                                        title={busyTitle ?? 'Copy another year’s figures into this one'}
+                                        aria-label="Copy a year"
+                                        className="cursor-pointer"
+                                    >
+                                        <Copy aria-hidden="true" />
+                                        <span className="hidden xl:inline">Copy a year</span>
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        onClick={() => setDialog('grant')}
+                                        disabled={dirty}
+                                        title={busyTitle}
+                                        className="cursor-pointer"
+                                    >
+                                        <ListPlus aria-hidden="true" />
+                                        Grant to all
+                                    </Button>
+                                </>
+                            )}
                         </>
                     )
                 }

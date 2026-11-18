@@ -389,6 +389,23 @@ class LeaveCreditService
     }
 
     /**
+     * The credits page's rows, filtered as on screen, A–Z. The page pages
+     * through it and the export takes it whole, so the two always list the
+     * same people.
+     *
+     * @return Builder<Employee>
+     */
+    public function filteredEmployees(int $year, string $search = '', string $letter = '', int $officeId = 0): Builder
+    {
+        return $this->employeesOnSheet($year)
+            ->with('office:id,name')
+            ->when($search !== '', fn (Builder $query) => $query->search($search))
+            ->when($letter !== '', fn (Builder $query) => $query->startingWith($letter))
+            ->when($officeId > 0, fn (Builder $query) => $query->where('office_id', $officeId))
+            ->orderedByName();
+    }
+
+    /**
      * Writes one employee's figures without opening its own transaction, so the
      * grid can put a hundred of them inside one.
      *

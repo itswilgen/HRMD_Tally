@@ -215,6 +215,34 @@ Each module below lists what the user must be able to do; the Yearly Tally page 
 - Excel: same columns and data as the PDF.
 - Large exports run in the background and notify the user when the file is ready.
 
+Decided with HR on 2026-11-18:
+
+- **Paper:** long bond (8.5 × 13 in), landscape.
+- **One sheet per office.** With "All offices" selected, each office starts on a new page with its own name at the top and its own signatory block, so each office's sheet can be signed and filed separately. Employees with no office come last, under "No office". With one office selected, the PDF holds that office only.
+- **Columns:** No., Last Name, First Name (suffix inside it, as on paper), Middle Name, Position Title, SG, Rate, JAN–DEC, then a total for each leave type used on that office's sheet, and a grand total. The month cells and totals are the tally service's text (rule 6), so the PDF reads exactly like the screen.
+- **Rate** prints only for a user allowed to see it on screen (RA 10173); for anyone else the column is left out, not blanked.
+- **Same rows as the screen:** the year, office, letter and search filters apply, and rule 7 decides who is on the sheet. Rows are numbered from 1 on each office's sheet.
+- **Header:** Republic of the Philippines, City of Tanjay, Human Resource Management Division, the Tanjay City seal, "Leave tally sheet", the year and the office. **Footer:** "Page X of Y" and the date printed.
+- **Signatories** print after each office's rows, in the order the HR Admin set, with no blank lines for missing ones. With none set, the sheet prints without a signatory block and the print screen says so.
+- Printing is allowed to anyone with the export permission (both roles today) and is recorded in the activity log: who printed which year and office.
+
+**Excel export of the tally** (built 2026-11-18):
+
+- Same rows, columns, month text and totals as the PDF, from the same print service, so the two cannot disagree.
+- **One worksheet per office**, named after the office (shortened to Excel's 31 characters), in the same order as the PDF's sheets.
+- Each worksheet starts with the same letterhead lines, the year and office, who exported it and when, and the filters note; then the column headings, the rows, and the signatories under them.
+- Rate, SG and the totals are numbers, so HR can sum and sort them; month cells are text, exactly as the screen shows them, one leave entry per line in the cell.
+- Set up to print from Excel as well: long bond (Folio), landscape, one page wide, the heading row repeated on every page; No. and the name columns stay in view while scrolling.
+- The rate is left out for anyone who cannot see it on screen. Exporting needs the export permission and is in the activity log.
+
+**Large exports in the background** (built 2026-11-18):
+
+- A request runs in the background when it would be slow: the tally PDF above **300 employees** (1,000 measured at 10 s and 480 MB), either Excel export above **5,000** (1,000 measured at under 1.5 s). Anything smaller downloads straight away, as before.
+- A background export opens **Downloads**, which says what is being prepared, refreshes itself, and offers the file when it is ready, or says what went wrong.
+- Downloads lists the signed-in user's own exports. **Only the person who asked for a file can download it**: a file can hold salary rates (RA 10173).
+- Files are kept for **7 days**, then deleted with their row. The clean-up runs whenever Downloads is opened or an export is started, so it needs no scheduler.
+- The file is built by the queue worker with the same services as the straight download, so the two are the same file. Requesting it is in the activity log, as before.
+
 ### 5.8 Activity log
 
 - Records create, update and delete of employees, leave records and settings: user, action, old and new values, date and time.
@@ -265,6 +293,7 @@ The credits screens record what the leave card says and put it next to what the 
 19. **Grant to all and copy a year fill blanks only**, unless the HR Admin ticks "overwrite". A blank in the grant dialog grants nothing; it is not a grant of 0.
 20. **Import from Excel** reads the downloaded sheet for one year, matches rows by employee number, and saves all rows or none. A blank cell in the file leaves that figure as it is — clearing is done on screen, where it can be seen.
 21. **Every change is in the activity log** with the old and new figure by leave code; a save that changes nothing logs nothing.
+22. **Credits export** (built 2026-11-18): an Excel workbook for one year with the same rows as the credits page (its year, office, letter and search filters, and rule 18). One worksheet, employees A–Z with an Office column so HR can sort and filter in Excel. Under each leave code that has a figure or days taken that year: Granted, Taken, Left; then the three totals. A blank figure stays a blank cell, never 0 (rule 14), and Left is blank where Granted is; an overdrawn Left is a negative number shown in red (rule 16). Taken is the tally's count (rule 15). Both roles may export it, as both read credits; it needs the export permission and is in the activity log. The monthly rate is not in it.
 
 ## 7. Data model (PostgreSQL)
 

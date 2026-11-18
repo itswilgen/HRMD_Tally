@@ -7,6 +7,7 @@ use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\SignatoryController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -69,6 +70,18 @@ Route::middleware('auth')->group(function () {
         Route::post('/', [HolidayController::class, 'store'])->name('store');
         Route::patch('{holiday}', [HolidayController::class, 'update'])->name('update');
         Route::delete('{holiday}', [HolidayController::class, 'destroy'])->name('destroy');
+    });
+
+    /*
+     * Signatories (section 5.7): who signs the printed tally, left to right.
+     * SignatoryPolicy keeps changes to an HR Admin.
+     */
+    Route::prefix('settings/signatories')->name('signatories.')->group(function () {
+        Route::get('/', [SignatoryController::class, 'index'])->name('index');
+        Route::post('/', [SignatoryController::class, 'store'])->name('store');
+        Route::patch('{signatory}', [SignatoryController::class, 'update'])->name('update');
+        Route::patch('{signatory}/move', [SignatoryController::class, 'move'])->name('move');
+        Route::delete('{signatory}', [SignatoryController::class, 'destroy'])->name('destroy');
     });
 
     /*
