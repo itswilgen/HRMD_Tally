@@ -7,6 +7,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeImportController;
 use App\Http\Controllers\EmployeeLeaveHistoryController;
 use App\Http\Controllers\LeaveCreditController;
+use App\Http\Controllers\LeaveCreditExportController;
 use App\Http\Controllers\LeaveCreditImportController;
 use App\Http\Controllers\LeaveRecordController;
 use App\Http\Controllers\TallyController;
@@ -68,6 +69,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('copy', [LeaveCreditController::class, 'copy'])->name('copy');
         Route::post('grant', [LeaveCreditController::class, 'grant'])->name('grant');
         Route::get('template', [LeaveCreditImportController::class, 'template'])->name('import.template');
+        // Excel: granted · taken · left for the year, same filters as the page (rule 22).
+        Route::get('export', LeaveCreditExportController::class)->name('export');
         Route::post('import/preview', [LeaveCreditImportController::class, 'preview'])->name('import.preview');
         Route::post('import', [LeaveCreditImportController::class, 'store'])->name('import.store');
         // Before the {employee} routes, so none of the words above is ever read

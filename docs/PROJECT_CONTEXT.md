@@ -285,6 +285,7 @@ The credits screens record what the leave card says and put it next to what the 
 19. **Grant to all and copy a year fill blanks only**, unless the HR Admin ticks "overwrite". A blank in the grant dialog grants nothing; it is not a grant of 0.
 20. **Import from Excel** reads the downloaded sheet for one year, matches rows by employee number, and saves all rows or none. A blank cell in the file leaves that figure as it is — clearing is done on screen, where it can be seen.
 21. **Every change is in the activity log** with the old and new figure by leave code; a save that changes nothing logs nothing.
+22. **Credits export** (built 2026-11-18): an Excel workbook for one year with the same rows as the credits page (its year, office, letter and search filters, and rule 18). One worksheet, employees A–Z with an Office column so HR can sort and filter in Excel. Under each leave code that has a figure or days taken that year: Granted, Taken, Left; then the three totals. A blank figure stays a blank cell, never 0 (rule 14), and Left is blank where Granted is; an overdrawn Left is a negative number shown in red (rule 16). Taken is the tally's count (rule 15). Both roles may export it, as both read credits; it needs the export permission and is in the activity log. The monthly rate is not in it.
 
 ## 7. Data model (PostgreSQL)
 

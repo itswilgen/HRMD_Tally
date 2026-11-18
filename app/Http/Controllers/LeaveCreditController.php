@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\Permission;
 use App\Http\Requests\Credits\CopyCreditsRequest;
 use App\Http\Requests\Credits\GrantCreditsRequest;
 use App\Http\Requests\Credits\SaveCreditsGridRequest;
@@ -16,7 +17,6 @@ use App\Models\Office;
 use App\Models\User;
 use App\Services\LeaveCreditService;
 use App\Services\LeaveTallyService;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -58,12 +58,7 @@ class LeaveCreditController extends Controller
 
         $letter = preg_match('/^[A-Z]$/', $letter) === 1 ? $letter : '';
 
-        $employees = $this->credits->employeesOnSheet($year)
-            ->with('office:id,name')
-            ->when($search !== '', fn (Builder $query) => $query->search($search))
-            ->when($letter !== '', fn (Builder $query) => $query->startingWith($letter))
-            ->when($officeId > 0, fn (Builder $query) => $query->where('office_id', $officeId))
-            ->orderedByName()
+        $employees = $this->credits->filteredEmployees($year, $search, $letter, $officeId)
             ->paginate(self::PER_PAGE)
             ->withQueryString();
 
@@ -95,6 +90,9 @@ class LeaveCreditController extends Controller
 
             'can' => [
                 'manage' => $request->user()?->can('manage', LeaveCredit::class) ?? false,
+                // Reading credits is enough to export them (rule 22), with the
+                // export permission every role that exports already has.
+                'export' => $request->user()?->can(Permission::GenerateExports->value) ?? false,
             ],
         ]);
     }
