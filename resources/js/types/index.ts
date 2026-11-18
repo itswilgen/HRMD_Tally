@@ -215,6 +215,51 @@ export interface OfficeRow {
     employeesCount: number;
 }
 
+/** A row on the leave types settings screen (App\Http\Controllers\LeaveTypeController). */
+export interface LeaveTypeRow {
+    id: number;
+    code: string;
+    name: string;
+    /** Chip palette key, one of App\Enums\LeaveChipColor. */
+    color: string;
+    /** False once retired: kept on the tally, not offered when encoding. */
+    isActive: boolean;
+    /** Including deleted records, which still count as use. */
+    leaveRecordsCount: number;
+    leaveCreditsCount: number;
+    /** In use: the code is locked and the type can be retired, not deleted. */
+    inUse: boolean;
+}
+
+/** A holiday as one year shows it (App\Services\HolidayService::forYear). */
+export interface HolidayRow {
+    id: number;
+    /** Y-m-d in the year on screen; a fixed-date holiday is projected onto it. */
+    date: string;
+    name: string;
+    /** One of App\Enums\HolidayKind. */
+    kind: HolidayKindValue;
+    kindLabel: string;
+    /** A fixed-date regular holiday: entered once, the same day every year. */
+    recursYearly: boolean;
+    /** Live leave records already on this day, saved while it was a working day. */
+    leaveRecords: number;
+    leaveEmployees: number;
+}
+
+/** Mirrors App\Enums\HolidayKind. */
+export type HolidayKindValue = 'REGULAR_FIXED' | 'REGULAR_MOVABLE' | 'SPECIAL_NON_WORKING';
+
+export interface HolidayKindOption {
+    value: HolidayKindValue;
+    label: string;
+}
+
+export interface ChipColorOption {
+    value: string;
+    label: string;
+}
+
 export interface RoleOption {
     value: UserRole;
     label: string;

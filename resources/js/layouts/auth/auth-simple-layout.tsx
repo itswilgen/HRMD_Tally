@@ -12,11 +12,13 @@ interface AuthLayoutProps {
 
 /**
  * The landing screen — sign-in and the password pages — in the HRMD banner's
- * own look: the City of Tanjay seal and "HRMD / LGU Tanjay City" set large on
- * the lavender-to-blue ground, with the banner's network drifting behind.
+ * own look: the lavender-to-blue ground with the banner's network drifting
+ * behind one centered column.
  *
- * The brand side is the only place in the system allowed to be this loud.
- * The sheet on the right stays plain and readable: it is still a form.
+ * The brand (the City of Tanjay seal, "HRMD", "LGU Tanjay City") sits above
+ * the sheet like a letterhead above a form, so the eye lands on who this is
+ * and then on what to do. Centering is right here and nowhere else in the
+ * system: the page holds one short brand line and one form, nothing to scan.
  */
 export default function AuthSimpleLayout({ children, title, description }: AuthLayoutProps) {
     const reduceMotion = useReducedMotion();
@@ -33,32 +35,30 @@ export default function AuthSimpleLayout({ children, title, description }: AuthL
         <div className="landing-canvas relative isolate min-h-svh overflow-hidden">
             <NetworkBackground />
 
-            <div className="relative mx-auto grid min-h-svh w-full max-w-6xl items-center gap-8 px-4 py-10 sm:px-8 lg:grid-cols-[minmax(0,1fr)_25rem] lg:gap-16">
-                <motion.header {...rise(0)} className="flex flex-col items-start gap-5 lg:gap-7">
+            <main className="short:py-5 relative mx-auto flex min-h-svh w-full max-w-[26rem] flex-col justify-center px-4 py-8">
+                <motion.header {...rise(0)} className="short:mb-4 mb-6 flex flex-col items-center text-center">
                     <Link
                         href="/"
-                        className="flex items-center gap-4 rounded-full focus-visible:outline-2 focus-visible:outline-offset-4 lg:flex-col lg:items-start lg:gap-7"
+                        aria-label="HRMD, LGU Tanjay City — Leave Tally Sheet"
+                        className="flex items-center gap-4 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-offset-4"
                     >
-                        <TanjaySeal size={112} className="drop-shadow-seal size-16 sm:size-20 lg:size-28" />
+                        {/* The banner's own lockup: seal on the left, the name beside it. */}
+                        <TanjaySeal size={80} alt="" className="drop-shadow-seal short:size-14 size-16 sm:size-[4.5rem]" />
                         <span className="grid">
-                            <span className="font-display text-landing-ink text-5xl leading-[0.95] font-bold tracking-[-0.03em] sm:text-6xl lg:text-8xl">
+                            <span className="font-display text-landing-ink short:text-4xl text-5xl leading-none font-bold tracking-[-0.03em]">
                                 HRMD
                             </span>
-                            <span className="font-display text-landing-ink mt-1 text-base font-bold tracking-[0.12em] uppercase sm:text-lg lg:mt-3 lg:text-2xl">
+                            <span className="font-display text-landing-ink mt-1.5 text-sm font-bold tracking-[0.18em] uppercase sm:text-base">
                                 LGU Tanjay City
                             </span>
                         </span>
                     </Link>
-
-                    <p className="text-landing-muted hidden max-w-[42ch] text-base leading-relaxed sm:block">
-                        Leave Tally Sheet of the Human Resource Management Division — encode leave, read the yearly sheet, and keep leave credits in
-                        one place.
-                    </p>
+                    <p className="text-landing-muted short:hidden mt-4 text-sm">Leave Tally Sheet · Human Resource Management Division</p>
                 </motion.header>
 
-                <motion.div {...rise(0.08)} className="w-full">
-                    <div className="bg-card shadow-landing rounded-xl border p-6 sm:p-8">
-                        <div className="form-rule mb-6 space-y-1 pb-4">
+                <motion.div {...rise(0.08)}>
+                    <div className="bg-card shadow-landing short:sm:p-6 rounded-xl border p-6 sm:p-8">
+                        <div className="form-rule short:mb-4 mb-6 space-y-1 pb-4">
                             <h1 className="text-foreground font-display text-[1.375rem] font-semibold tracking-[-0.02em]">{title}</h1>
                             {description && <p className="text-muted-foreground text-sm">{description}</p>}
                         </div>
@@ -66,11 +66,11 @@ export default function AuthSimpleLayout({ children, title, description }: AuthL
                         {children}
                     </div>
 
-                    <p className="text-landing-muted mt-5 text-xs leading-relaxed">
+                    <p className="text-landing-muted mx-auto mt-5 max-w-[38ch] text-center text-xs leading-relaxed">
                         For authorised HRMD staff. Employee records are personal information protected under the Data Privacy Act of 2012 (RA 10173).
                     </p>
                 </motion.div>
-            </div>
+            </main>
         </div>
     );
 }

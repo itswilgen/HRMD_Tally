@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\EmployeeImportController;
+use App\Http\Controllers\EmployeeLeaveHistoryController;
 use App\Http\Controllers\LeaveCreditController;
 use App\Http\Controllers\LeaveCreditImportController;
 use App\Http\Controllers\LeaveRecordController;
@@ -96,6 +97,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('import/template', [EmployeeImportController::class, 'template'])->name('import.template');
         Route::post('import/preview', [EmployeeImportController::class, 'preview'])->name('import.preview');
         Route::post('import', [EmployeeImportController::class, 'store'])->name('import.store');
+        // Every leave day of one employee across all years (section 5.6).
+        // Read-only, and open to both roles, as the tally is.
+        Route::get('{employee}/leave', EmployeeLeaveHistoryController::class)->name('leave');
         Route::get('{employee}/edit', [EmployeeController::class, 'edit'])->name('edit');
         Route::patch('{employee}', [EmployeeController::class, 'update'])->name('update');
         Route::patch('{employee}/activate', [EmployeeController::class, 'activate'])->name('activate');

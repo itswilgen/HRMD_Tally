@@ -14,6 +14,7 @@ live in `docs/PROJECT_CONTEXT.md`, the design in `docs/UI_SPEC.md`.
 | Area | Control | Where |
 | --- | --- | --- |
 | Accounts | No self-registration. Only an HR Admin creates accounts. | `routes/auth.php` (no `register` route), `UserController` |
+| Password resets | No "forgot password" link or email reset. Only an HR Admin sets a new password, under Settings → User accounts; a person can still change their own password while signed in. | `routes/auth.php` (no `password.request` / `password.reset` routes), `UpdateUserRequest`, `tests/Feature/Auth/PasswordResetTest.php` |
 | First admin | Created at install with a typed password; the seeded test logins are never created in production. | `php artisan hrmd:install` (`InstallCommand`) |
 | Sign-in | 5 failed attempts per email and IP, then a wait before the next try. | `app/Http/Requests/Auth/LoginRequest.php` |
 | Deactivated accounts | Cannot sign in, and an open session is ended on the next request. | `LoginRequest`, `EnsureAccountIsActive` middleware |

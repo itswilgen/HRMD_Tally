@@ -170,6 +170,15 @@ Each module below lists what the user must be able to do; the Yearly Tally page 
   - *Regular, fixed date* — recurs every year, entered once: Jan 1, Apr 9, May 1, Jun 12, Nov 30, Dec 25, Dec 30.
   - *Regular, movable* — Holy Week (Maundy Thursday, Good Friday), Eid'l Fitr, Eid'l Adha and National Heroes Day fall on different dates each year, so they are entered per year.
   - *Special non-working* — set yearly by presidential proclamation, entered per year.
+
+  The holidays page (Settings → Holidays) follows these rules:
+  - Only an HR Admin adds, edits or removes a holiday; everyone signed in can read the list.
+  - The page shows **one year at a time**. A fixed-date holiday appears in every year, marked "Every year"; editing it changes every year.
+  - **One holiday per day.** A dated holiday cannot share its date with another holiday, including a fixed-date one on the same month and day; two fixed-date holidays cannot share a month and day. A fixed-date holiday cannot be 29 February, which most years do not have.
+  - **Leave already on the date.** Adding a holiday, or moving one to a new date, where leave is already encoded shows how many records and employees are affected and needs the HR Admin to confirm. The records are not changed: HR checks them on the tally. Each holiday on the page also shows how much leave is on file for it.
+  - Removing a holiday changes no record; the date becomes a working day for new encoding.
+  - Encoding reads the holidays table on every request (no cache), so a change counts at once.
+  - Every add, edit and removal is in the activity log.
 - **Signatories:** the names and positions printed on the PDF footer, maintained by HR Admin (see 5.7).
 - **Users:** create accounts, assign role, deactivate.
 
@@ -192,7 +201,12 @@ Each module below lists what the user must be able to do; the Yearly Tally page 
 
 ### 5.6 Employee leave history
 
-- Per-employee page listing every leave record for a selected year, with totals per type.
+- Per-employee page listing every leave record across all years, newest year first, with totals per type for each year (confirmed in the roadmap, 2026-11-17).
+- Opened from the employee's name on the masterlist and on the tally sheet. Both roles may read it, as both may read the tally.
+- Each year shows the twelve month cells and totals exactly as the tally prints them, built by the same tally service (rule 6), then every day: date, leave type, whole day or AM/PM, remarks, and who encoded it.
+- Deleted leave records are not listed; they are not on the tally either.
+- Read-only. Days are added, changed and deleted on the tally, where the double-encoding and holiday rules run.
+- The monthly rate is not shown here, so the page needs no salary permission (RA 10173).
 
 ### 5.7 Print and export
 
@@ -217,7 +231,13 @@ These rules are enforced on the server and covered by automated tests.
 5. **Tally text.** Consecutive days of the same leave type are compressed: 23, 24, 25 → "23–25". Separate days are comma-separated: "4, 9". Half-days show AM or PM: "13 PM".
 6. **One source of truth.** Tally text and totals are built only by the backend tally service, so the screen, PDF and Excel always match.
 7. **Inactive employees** stay in past years' tallies and are hidden from encoding and from the current year by default.
-8. **Leave types** are managed in Settings, not hardcoded. A leave type that has records can be deactivated but not deleted.
+8. **Leave types** are managed in Settings, not hardcoded. A leave type that is in use can be retired (deactivated) but not deleted.
+   - Only an HR Admin adds, edits, orders, retires or deletes a type; everyone signed in can read the list.
+   - A **code** is 1–10 capital letters or digits and unique. It is **locked once the type is in use**: any leave record (deleted records included) or any credit figure, so a printed sheet and the screen never disagree about what "SL" meant. The name and colour can change at any time.
+   - The **colour** is one of the chip palette keys (sky, amber, violet, teal, slate, emerald, rose); the palette itself lives in the design tokens.
+   - **Order** is the order of the encoding picker and of the tally's total columns. A new type goes last.
+   - A **retired** type keeps its records, its tally column and its credit figures, but is not offered when encoding (rule 17 for credits). It can be restored.
+   - Every add, edit, reorder, retire, restore and delete is in the activity log.
 9. **Soft deletes.** Deleted leave records and employees are recoverable and recorded in the activity log. The one exception is the permanent erase in section 5.2, which is a separate HR Admin permission, reaches only records that are already deleted and never a record with leave on file.
 10. **Year boundaries.** A range crossing December 31 is split into its proper years automatically.
 
@@ -351,7 +371,7 @@ The system must stay fast, secure and easy to use as leave records accumulate ye
 - Tally query uses a date range (`leave_date BETWEEN` start and end of year), never `YEAR(leave_date)`, so indexes are used.
 - Always paginated (letter tabs + pagination); never load all employees or all records at once.
 - `chunk()` / `lazy()` for exports and bulk operations; large exports run as queued jobs.
-- Lookup data (offices, leave types, holidays) cached and cleared when updated.
+- Lookup data (offices, leave types, holidays) is read fresh on every request, not cached: the tables are a few dozen rows, and a stale holiday cache would silently mis-expand every range encoded after HR adds a newly proclaimed holiday.
 - Target: tally page loads in under 2 seconds with 1,000+ employees and 100,000+ leave records seeded.
 
 ### Security

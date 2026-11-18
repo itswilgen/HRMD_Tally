@@ -2,6 +2,7 @@ import { TallyMonthCell, type MonthState } from '@/components/tally-month-cell';
 import { MONTH_LABELS } from '@/lib/months';
 import { cn } from '@/lib/utils';
 import { type EmployeeRecord, type LeaveTypeColumn, type TallyEntry, type TallyRow } from '@/types';
+import { Link } from '@inertiajs/react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { useRef, useState } from 'react';
@@ -207,7 +208,13 @@ export function TallyTable({
                                 >
                                     <div className="w-40 sm:w-52">
                                         <div className="flex items-center gap-1.5">
-                                            <span className="truncate font-semibold">{employee.listName}</span>
+                                            <Link
+                                                href={route('employees.leave', employee.id)}
+                                                title={`Leave history of ${employee.listName}`}
+                                                className="hover:text-primary focus-visible:ring-ring truncate rounded-sm font-semibold underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:outline-none"
+                                            >
+                                                {employee.listName}
+                                            </Link>
                                             {!employee.isActive && (
                                                 <span className="text-muted-foreground text-2xs shrink-0" title="No longer on the encoding list">
                                                     (out)

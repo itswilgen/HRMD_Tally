@@ -73,11 +73,25 @@ class LeaveType extends Model
     }
 
     /**
-     * A type that has ever been used must be deactivated instead of deleted,
-     * so historical tallies keep their codes (business rule 8).
+     * @return HasMany<LeaveCredit, $this>
+     */
+    public function leaveCredits(): HasMany
+    {
+        return $this->hasMany(LeaveCredit::class);
+    }
+
+    /**
+     * A type that has ever been used must be retired instead of deleted, and
+     * keeps its code, so historical tallies and credit figures keep their
+     * letters (business rule 8).
+     *
+     * Credit figures count as well as leave days: leave_credits restricts the
+     * delete at the database level, so a type with only figures on file would
+     * otherwise pass this check and then fail with a foreign key error.
      */
     public function isInUse(): bool
     {
-        return $this->leaveRecords()->withTrashed()->exists();
+        return $this->leaveRecords()->withTrashed()->exists()
+            || $this->leaveCredits()->exists();
     }
 }
