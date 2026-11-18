@@ -6,6 +6,9 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Laptop screens 768px tall and less: the sign-in page tightens to fit without scrolling. */
+@custom-variant short (@media (max-height: 820px));
+
 /*
   HRMD design tokens.
 
