@@ -183,15 +183,22 @@ export default function TallyIndex({
                         {canExport && (
                             <>
                                 {/*
-                                  Listed and disabled rather than hidden: the
-                                  paper process ends in a printed sheet, and the
-                                  encoder should be able to see that is where
-                                  this is going. The export phase wires them up.
+                                  A plain link, not an Inertia visit: the PDF
+                                  opens in its own tab, where HR prints it, with
+                                  the same filters as the sheet on screen.
                                 */}
-                                <Button variant="outline" disabled title="Added in the export phase" className="hidden sm:inline-flex">
-                                    <FileDown aria-hidden="true" />
-                                    Print (PDF)
+                                <Button variant="outline" asChild className="hidden sm:inline-flex">
+                                    <a
+                                        href={route('tally.print', { year, ...filters })}
+                                        target="_blank"
+                                        rel="noopener"
+                                        title="Opens the sheet on long bond paper, one office per sheet, in a new tab"
+                                    >
+                                        <FileDown aria-hidden="true" />
+                                        Print (PDF)
+                                    </a>
                                 </Button>
+                                {/* Listed and disabled until the Excel step of the export phase. */}
                                 <Button variant="outline" disabled title="Added in the export phase" className="hidden lg:inline-flex">
                                     <FileSpreadsheet aria-hidden="true" />
                                     Excel

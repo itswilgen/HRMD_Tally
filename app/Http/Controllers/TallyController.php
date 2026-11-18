@@ -12,7 +12,7 @@ use App\Models\LeaveType;
 use App\Models\Office;
 use App\Services\LeaveEncodingService;
 use App\Services\LeaveTallyService;
-use Illuminate\Database\Eloquent\Builder;
+use App\Services\TallyFilters;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
@@ -33,13 +33,6 @@ class TallyController extends Controller
      */
     private const PER_PAGE = 25;
 
-    /**
-     * How far back the year picker reaches. The system has no leave before it
-     * was installed, so offering 1990 would only invite a mis-click; next year
-     * is offered because leave is sometimes filed in advance.
-     */
-    private const YEARS_BACK = 5;
-
     public function __construct(
         private readonly LeaveTallyService $tallies,
         private readonly LeaveEncodingService $encoding,
@@ -49,29 +42,10 @@ class TallyController extends Controller
     {
         $this->authorize('viewAny', LeaveRecord::class);
 
-        $year = $this->year($request);
-        $search = trim((string) $request->query('search', ''));
-        $letter = mb_strtoupper(trim((string) $request->query('letter', '')));
-        $officeId = (int) $request->query('office', 0);
+        $filters = TallyFilters::fromRequest($request);
+        $year = $filters->year;
 
-        // A single letter only. Anything else is someone editing the URL, and
-        // the honest answer to that is to ignore it rather than to error.
-        $letter = preg_match('/^[A-Z]$/', $letter) === 1 ? $letter : '';
-
-        $employees = Employee::query()
-            ->with('office:id,name')
-            ->when($search !== '', fn (Builder $query) => $query->search($search))
-            ->when($letter !== '', fn (Builder $query) => $query->startingWith($letter))
-            ->when($officeId > 0, fn (Builder $query) => $query->where('office_id', $officeId))
-            // Business rule 7: the sheet lists the people currently being
-            // encoded for, plus anyone who has leave on file for the year being
-            // looked at. That second half is what keeps a resigned employee's
-            // days visible on the year they were still working.
-            ->where(function (Builder $query) use ($year): void {
-                $query->where('is_active', true)
-                    ->orWhereHas('leaveRecords', fn (Builder $records) => $records->forYear($year));
-            })
-            ->orderedByName()
+        $employees = $filters->employees()
             ->paginate(self::PER_PAGE)
             ->withQueryString();
 
@@ -99,38 +73,12 @@ class TallyController extends Controller
             'letters' => $this->lettersInUse(),
 
             'year' => $year,
-            'years' => $this->selectableYears(),
+            'years' => TallyFilters::selectableYears(),
             'currentMonth' => $this->currentMonth($year),
             'asOf' => Carbon::now()->toDateString(),
 
-            'filters' => [
-                'search' => $search,
-                'letter' => $letter,
-                'office' => $officeId > 0 ? (string) $officeId : '',
-            ],
+            'filters' => $filters->toArray(),
         ]);
-    }
-
-    /**
-     * The year being looked at, clamped to the years the picker offers so a
-     * hand-edited URL cannot ask for a sheet that is not on the list.
-     */
-    private function year(Request $request): int
-    {
-        $years = $this->selectableYears();
-        $requested = (int) $request->query('year', (string) Carbon::now()->year);
-
-        return in_array($requested, $years, true) ? $requested : Carbon::now()->year;
-    }
-
-    /**
-     * @return list<int>
-     */
-    private function selectableYears(): array
-    {
-        $current = Carbon::now()->year;
-
-        return range($current + 1, $current - self::YEARS_BACK);
     }
 
     /**

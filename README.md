@@ -11,6 +11,10 @@ data model and the phase plan. Read it before changing anything.
 - PHP 8.3 or newer, Composer
 - PostgreSQL 17 (with the `pdo_pgsql` extension enabled)
 - Node 20 or newer, npm
+- **Memory for printing:** the tally PDF needs about 0.7 MB per employee row
+  while it is laid out (653 employees measured at about 470 MB and 7 seconds).
+  The print request raises PHP's limit to 1 GB for itself only, so the server
+  needs about 1 GB of free RAM when HR prints every office at once.
 
 ## Setup
 

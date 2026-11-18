@@ -215,6 +215,17 @@ Each module below lists what the user must be able to do; the Yearly Tally page 
 - Excel: same columns and data as the PDF.
 - Large exports run in the background and notify the user when the file is ready.
 
+Decided with HR on 2026-11-18:
+
+- **Paper:** long bond (8.5 × 13 in), landscape.
+- **One sheet per office.** With "All offices" selected, each office starts on a new page with its own name at the top and its own signatory block, so each office's sheet can be signed and filed separately. Employees with no office come last, under "No office". With one office selected, the PDF holds that office only.
+- **Columns:** No., Last Name, First Name (suffix inside it, as on paper), Middle Name, Position Title, SG, Rate, JAN–DEC, then a total for each leave type used on that office's sheet, and a grand total. The month cells and totals are the tally service's text (rule 6), so the PDF reads exactly like the screen.
+- **Rate** prints only for a user allowed to see it on screen (RA 10173); for anyone else the column is left out, not blanked.
+- **Same rows as the screen:** the year, office, letter and search filters apply, and rule 7 decides who is on the sheet. Rows are numbered from 1 on each office's sheet.
+- **Header:** Republic of the Philippines, City of Tanjay, Human Resource Management Division, the Tanjay City seal, "Leave tally sheet", the year and the office. **Footer:** "Page X of Y" and the date printed.
+- **Signatories** print after each office's rows, in the order the HR Admin set, with no blank lines for missing ones. With none set, the sheet prints without a signatory block and the print screen says so.
+- Printing is allowed to anyone with the export permission (both roles today) and is recorded in the activity log: who printed which year and office.
+
 ### 5.8 Activity log
 
 - Records create, update and delete of employees, leave records and settings: user, action, old and new values, date and time.

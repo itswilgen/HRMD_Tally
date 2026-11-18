@@ -40,6 +40,7 @@ use Illuminate\Support\Carbon;
  * @property-read string|null $middle_initial
  * @property-read string $list_name
  * @property-read string $full_name
+ * @property-read Office|null $office null until HR assigns one (office_id is nullable)
  */
 class Employee extends Model
 {
