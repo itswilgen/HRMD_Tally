@@ -198,10 +198,16 @@ export default function TallyIndex({
                                         Print (PDF)
                                     </a>
                                 </Button>
-                                {/* Listed and disabled until the Excel step of the export phase. */}
-                                <Button variant="outline" disabled title="Added in the export phase" className="hidden lg:inline-flex">
-                                    <FileSpreadsheet aria-hidden="true" />
-                                    Excel
+                                {/* A download: the browser saves the .xlsx, the page stays put. */}
+                                <Button variant="outline" asChild className="hidden lg:inline-flex">
+                                    <a
+                                        href={route('tally.excel', { year, ...filters })}
+                                        download
+                                        title="Downloads the same sheet as an Excel workbook, one worksheet per office"
+                                    >
+                                        <FileSpreadsheet aria-hidden="true" />
+                                        Excel
+                                    </a>
                                 </Button>
                             </>
                         )}

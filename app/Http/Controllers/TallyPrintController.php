@@ -6,8 +6,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\Permission;
 use App\Models\Employee;
-use App\Models\Office;
-use App\Models\Signatory;
 use App\Models\User;
 use App\Services\TallyFilters;
 use App\Services\TallySheetPrint;
@@ -60,8 +58,8 @@ class TallyPrintController extends Controller
             'year' => $filters->year,
             'showRate' => $showRate,
             'months' => self::MONTHS,
-            'filtersNote' => $this->filtersNote($filters),
-            'signatories' => Signatory::query()->ordered()->get(['label', 'name', 'position'])->toArray(),
+            'filtersNote' => $print->filtersNote($filters),
+            'signatories' => $print->signatories(),
             'seal' => $this->seal(),
         ])->setPaper(self::LONG_BOND, 'landscape');
 
@@ -82,14 +80,14 @@ class TallyPrintController extends Controller
             ->event('printed')
             ->withProperties([
                 'year' => $filters->year,
-                'office' => $this->officeName($filters),
+                'office' => $print->officeName($filters),
                 'filters' => $filters->toArray(),
                 'sheets' => count($sheets),
                 'employees' => array_sum(array_map(static fn (array $sheet): int => count($sheet['rows']), $sheets)),
             ])
-            ->log("Printed the {$filters->year} leave tally sheet ({$this->officeName($filters)})");
+            ->log("Printed the {$filters->year} leave tally sheet ({$print->officeName($filters)})");
 
-        $file = sprintf('leave-tally-%d-%s.pdf', $filters->year, Str::slug($this->officeName($filters)));
+        $file = sprintf('leave-tally-%d-%s.pdf', $filters->year, Str::slug($print->officeName($filters)));
 
         return response($dompdf->output(), 200, [
             'Content-Type' => 'application/pdf',
@@ -97,36 +95,6 @@ class TallyPrintController extends Controller
             'Content-Disposition' => 'inline; filename="'.$file.'"',
             'Cache-Control' => 'private, no-store',
         ]);
-    }
-
-    private function officeName(TallyFilters $filters): string
-    {
-        if ($filters->officeId === 0) {
-            return 'All offices';
-        }
-
-        $name = Office::query()->whereKey($filters->officeId)->value('name');
-
-        return is_string($name) ? $name : 'Unknown office';
-    }
-
-    /**
-     * The search and letter filters, said on the sheet, so a partial printout
-     * is never mistaken for the whole office.
-     */
-    private function filtersNote(TallyFilters $filters): string
-    {
-        $parts = [];
-
-        if ($filters->letter !== '') {
-            $parts[] = "Last names starting with {$filters->letter}";
-        }
-
-        if ($filters->search !== '') {
-            $parts[] = "Matching \"{$filters->search}\"";
-        }
-
-        return $parts === [] ? '' : 'Filtered: '.implode(' · ', $parts);
     }
 
     /** The seal as a data URI: dompdf reads no files outside its chroot. */

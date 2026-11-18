@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\Employee;
 use App\Models\LeaveType;
 use App\Models\Office;
+use App\Models\Signatory;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 /**
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * only arranges them: groups by office, numbers the rows, and picks which
  * leave type totals to print.
  *
- * @phpstan-type PrintRow array{no: int, lastName: string, firstName: string, middleName: string, position: string, salaryGrade: string, rate: string, months: list<list<string>>, totals: array<int, string>, grandTotal: string}
+ * @phpstan-type PrintRow array{no: int, lastName: string, firstName: string, middleName: string, position: string, salaryGrade: string, rate: string, rateValue: float|null, months: list<list<string>>, totals: array<int, string>, grandTotal: string}
  * @phpstan-type PrintSheet array{office: string, rows: list<PrintRow>, typeColumns: list<array{id: int, code: string}>}
  */
 class TallySheetPrint
@@ -133,6 +134,8 @@ class TallySheetPrint
                 'position' => $employee->position_title,
                 'salaryGrade' => $employee->salary_grade !== null ? (string) $employee->salary_grade : '',
                 'rate' => $showRate && $employee->monthly_rate !== null ? number_format((float) $employee->monthly_rate, 2) : '',
+                // The same figure as a number, for Excel to sum and sort.
+                'rateValue' => $showRate && $employee->monthly_rate !== null ? round((float) $employee->monthly_rate, 2) : null,
                 'months' => array_map(
                     static fn (array $month): array => array_map(static fn (array $entry): string => $entry['text'], $month['entries']),
                     $row['months'],
@@ -146,5 +149,52 @@ class TallySheetPrint
         }
 
         return ['office' => $office, 'rows' => $rows, 'typeColumns' => $typeColumns];
+    }
+
+    /** What the sheet is for: one office's name, or "All offices". */
+    public function officeName(TallyFilters $filters): string
+    {
+        if ($filters->officeId === 0) {
+            return 'All offices';
+        }
+
+        $name = Office::query()->whereKey($filters->officeId)->value('name');
+
+        return is_string($name) ? $name : 'Unknown office';
+    }
+
+    /**
+     * The search and letter filters, said on the sheet, so a partial printout
+     * is never mistaken for the whole office.
+     */
+    public function filtersNote(TallyFilters $filters): string
+    {
+        $parts = [];
+
+        if ($filters->letter !== '') {
+            $parts[] = "Last names starting with {$filters->letter}";
+        }
+
+        if ($filters->search !== '') {
+            $parts[] = "Matching \"{$filters->search}\"";
+        }
+
+        return $parts === [] ? '' : 'Filtered: '.implode(' · ', $parts);
+    }
+
+    /**
+     * Who signs, left to right, as the PDF and the workbook print them.
+     *
+     * @return list<array{label: string, name: string, position: string}>
+     */
+    public function signatories(): array
+    {
+        return array_values(Signatory::query()->ordered()->get()
+            ->map(static fn (Signatory $signatory): array => [
+                'label' => $signatory->label,
+                'name' => $signatory->name,
+                'position' => $signatory->position,
+            ])
+            ->all());
     }
 }

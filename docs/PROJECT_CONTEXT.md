@@ -226,6 +226,15 @@ Decided with HR on 2026-11-18:
 - **Signatories** print after each office's rows, in the order the HR Admin set, with no blank lines for missing ones. With none set, the sheet prints without a signatory block and the print screen says so.
 - Printing is allowed to anyone with the export permission (both roles today) and is recorded in the activity log: who printed which year and office.
 
+**Excel export of the tally** (built 2026-11-18):
+
+- Same rows, columns, month text and totals as the PDF, from the same print service, so the two cannot disagree.
+- **One worksheet per office**, named after the office (shortened to Excel's 31 characters), in the same order as the PDF's sheets.
+- Each worksheet starts with the same letterhead lines, the year and office, who exported it and when, and the filters note; then the column headings, the rows, and the signatories under them.
+- Rate, SG and the totals are numbers, so HR can sum and sort them; month cells are text, exactly as the screen shows them, one leave entry per line in the cell.
+- Set up to print from Excel as well: long bond (Folio), landscape, one page wide, the heading row repeated on every page; No. and the name columns stay in view while scrolling.
+- The rate is left out for anyone who cannot see it on screen. Exporting needs the export permission and is in the activity log.
+
 ### 5.8 Activity log
 
 - Records create, update and delete of employees, leave records and settings: user, action, old and new values, date and time.

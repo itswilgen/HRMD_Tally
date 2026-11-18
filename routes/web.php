@@ -10,6 +10,7 @@ use App\Http\Controllers\LeaveCreditController;
 use App\Http\Controllers\LeaveCreditImportController;
 use App\Http\Controllers\LeaveRecordController;
 use App\Http\Controllers\TallyController;
+use App\Http\Controllers\TallyExcelController;
 use App\Http\Controllers\TallyPrintController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +40,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('tally', [TallyController::class, 'index'])->name('tally.index');
     // Print (PDF): same filters and rows as the screen, one sheet per office (5.7).
     Route::get('tally/print', TallyPrintController::class)->name('tally.print');
+    // Excel: the same sheet as a workbook, one worksheet per office (5.7).
+    Route::get('tally/excel', TallyExcelController::class)->name('tally.excel');
 
     Route::prefix('leave')->name('leave.')->group(function () {
         Route::post('preview', [LeaveRecordController::class, 'preview'])->name('preview');
