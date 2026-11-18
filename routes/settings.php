@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\HolidayController;
 use App\Http\Controllers\LeaveTypeController;
 use App\Http\Controllers\OfficeController;
 use App\Http\Controllers\Settings\PasswordController;
@@ -56,6 +57,18 @@ Route::middleware('auth')->group(function () {
         Route::patch('{leaveType}/retire', [LeaveTypeController::class, 'retire'])->name('retire');
         Route::patch('{leaveType}/restore', [LeaveTypeController::class, 'restore'])->name('restore');
         Route::delete('{leaveType}', [LeaveTypeController::class, 'destroy'])->name('destroy');
+    });
+
+    /*
+     * Holidays (section 5.3), one year at a time via ?year=. Encoding reads
+     * this table on every request, so a change here counts at once.
+     * HolidayPolicy keeps changes to an HR Admin.
+     */
+    Route::prefix('settings/holidays')->name('holidays.')->group(function () {
+        Route::get('/', [HolidayController::class, 'index'])->name('index');
+        Route::post('/', [HolidayController::class, 'store'])->name('store');
+        Route::patch('{holiday}', [HolidayController::class, 'update'])->name('update');
+        Route::delete('{holiday}', [HolidayController::class, 'destroy'])->name('destroy');
     });
 
     /*

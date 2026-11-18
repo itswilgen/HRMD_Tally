@@ -170,6 +170,15 @@ Each module below lists what the user must be able to do; the Yearly Tally page 
   - *Regular, fixed date* — recurs every year, entered once: Jan 1, Apr 9, May 1, Jun 12, Nov 30, Dec 25, Dec 30.
   - *Regular, movable* — Holy Week (Maundy Thursday, Good Friday), Eid'l Fitr, Eid'l Adha and National Heroes Day fall on different dates each year, so they are entered per year.
   - *Special non-working* — set yearly by presidential proclamation, entered per year.
+
+  The holidays page (Settings → Holidays) follows these rules:
+  - Only an HR Admin adds, edits or removes a holiday; everyone signed in can read the list.
+  - The page shows **one year at a time**. A fixed-date holiday appears in every year, marked "Every year"; editing it changes every year.
+  - **One holiday per day.** A dated holiday cannot share its date with another holiday, including a fixed-date one on the same month and day; two fixed-date holidays cannot share a month and day. A fixed-date holiday cannot be 29 February, which most years do not have.
+  - **Leave already on the date.** Adding a holiday, or moving one to a new date, where leave is already encoded shows how many records and employees are affected and needs the HR Admin to confirm. The records are not changed: HR checks them on the tally. Each holiday on the page also shows how much leave is on file for it.
+  - Removing a holiday changes no record; the date becomes a working day for new encoding.
+  - Encoding reads the holidays table on every request (no cache), so a change counts at once.
+  - Every add, edit and removal is in the activity log.
 - **Signatories:** the names and positions printed on the PDF footer, maintained by HR Admin (see 5.7).
 - **Users:** create accounts, assign role, deactivate.
 
@@ -357,7 +366,7 @@ The system must stay fast, secure and easy to use as leave records accumulate ye
 - Tally query uses a date range (`leave_date BETWEEN` start and end of year), never `YEAR(leave_date)`, so indexes are used.
 - Always paginated (letter tabs + pagination); never load all employees or all records at once.
 - `chunk()` / `lazy()` for exports and bulk operations; large exports run as queued jobs.
-- Lookup data (offices, leave types, holidays) cached and cleared when updated.
+- Lookup data (offices, leave types, holidays) is read fresh on every request, not cached: the tables are a few dozen rows, and a stale holiday cache would silently mis-expand every range encoded after HR adds a newly proclaimed holiday.
 - Target: tally page loads in under 2 seconds with 1,000+ employees and 100,000+ leave records seeded.
 
 ### Security

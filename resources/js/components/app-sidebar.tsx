@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sidebar';
 import { type NavGroup } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Building2, CalendarRange, Contact, LayoutDashboard, Scale, SlidersHorizontal, Tags, UsersRound } from 'lucide-react';
+import { Building2, CalendarOff, CalendarRange, Contact, LayoutDashboard, Scale, SlidersHorizontal, Tags, UsersRound } from 'lucide-react';
 import AppLogo from './app-logo';
 
 /*
@@ -45,6 +45,7 @@ const navGroups: NavGroup[] = [
             { title: 'Offices', url: '/settings/offices', icon: Building2 },
             // Same reasoning: encoders read the codes, an HR Admin changes them.
             { title: 'Leave types', url: '/settings/leave-types', icon: Tags },
+            { title: 'Holidays', url: '/settings/holidays', icon: CalendarOff },
             { title: 'My settings', url: '/settings/profile', icon: SlidersHorizontal },
         ],
     },
