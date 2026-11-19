@@ -10,7 +10,6 @@ CHANGELOG.md export-ignore
 README.md export-ignore
 
 # Windows setup scripts for the HRMD server PC (scripts/windows): Command
-# Prompt wants CRLF line endings, and Task Scheduler reads its task files as
-# UTF-16, as it writes them itself.
+# Prompt and Windows Script Host want CRLF line endings.
 scripts/windows/*.cmd text eol=crlf
-scripts/windows/*.xml text eol=crlf working-tree-encoding=UTF-16LE-BOM
+scripts/windows/*.vbs text eol=crlf
