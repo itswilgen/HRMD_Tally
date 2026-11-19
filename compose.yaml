@@ -26,6 +26,8 @@ services:
     environment: *app-environment
     ports:
       - "${APP_PORT:-8080}:80"
+    volumes:
+      - exports:/var/www/html/storage/app/private/exports
     depends_on:
       db:
         condition: service_healthy
@@ -37,6 +39,9 @@ services:
     env_file: .env
     environment: *app-environment
     user: www-data
+    # The worker writes finished files here and the app container serves them.
+    volumes:
+      - exports:/var/www/html/storage/app/private/exports
     # Builds big prints and exports in the background (PROJECT_CONTEXT 5.7). A
     # 1,000-employee PDF peaks near 500 MB, so the worker may grow to 1 GB
     # before it restarts itself, instead of restarting after every print.
@@ -88,3 +93,4 @@ services:
 
 volumes:
   db-data:
+  exports:
